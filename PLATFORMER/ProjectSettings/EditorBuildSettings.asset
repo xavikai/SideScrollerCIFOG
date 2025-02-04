@@ -11,6 +11,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/SideScroller.unity
     guid: 0b2ca05d196fbc44ba95cee92e734455
+  - enabled: 1
+    path: Assets/Scenes/PauseMenu.unity
+    guid: e02d7bf0872b2c54db0445ae861f19ff
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0
