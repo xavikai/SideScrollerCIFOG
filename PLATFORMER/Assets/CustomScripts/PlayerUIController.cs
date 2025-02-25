@@ -1,6 +1,11 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.SceneManagement;
+
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace StarterAssets
 {
@@ -18,6 +23,14 @@ namespace StarterAssets
         // Variables públiques per controlar el drenatge i regeneració de l'estamina
         public float runStaminaDrainRate = 10f;  // Estamina perduda per segon mentre sprintes
         public float staminaRegenRate = 5f;      // Estamina regenerada per segon quan no sprintes
+
+        // Variable per assignar l'asset de la escena Game Over (només visible a l'Editor)
+#if UNITY_EDITOR
+        public SceneAsset gameOverSceneAsset;
+#endif
+        // Aquesta cadena es carrega automàticament amb el nom de l'asset GameOver
+        [HideInInspector]
+        public string gameOverSceneName;
 
         // Variables internes per als valors actuals
         private float currentHealth;
@@ -82,6 +95,28 @@ namespace StarterAssets
             {
                 healthSlider.value = currentHealth;
             }
+            Debug.Log("Vida restant: " + currentHealth);
+            if (currentHealth <= 0)
+            {
+                Die();
+            }
+        }
+
+        // Aquest mètode rep dany i actualitza la salut
+        public void TakeDamage(float damage)
+        {
+            currentHealth -= damage;
+            if (currentHealth < 0)
+                currentHealth = 0;
+            if (healthSlider != null)
+            {
+                healthSlider.value = currentHealth;
+            }
+            Debug.Log("Vida restant: " + currentHealth);
+            if (currentHealth <= 0)
+            {
+                Die();
+            }
         }
 
         public void UpdateStamina(float newStamina)
@@ -114,5 +149,31 @@ namespace StarterAssets
                 coinText.text = "Monedes: " + currentCoins.ToString();
             }
         }
+
+        // Aquesta funció s'executa quan la salut arriba a 0: carrega l'escena Game Over
+        private void Die()
+        {
+            Debug.Log("El jugador ha mort. Carregant Game Over...");
+            if (!string.IsNullOrEmpty(gameOverSceneName))
+            {
+                SceneManager.LoadScene(gameOverSceneName);
+            }
+            else
+            {
+                Debug.LogWarning("No s'ha assignat l'asset de Game Over.");
+            }
+        }
+
+#if UNITY_EDITOR
+        // Aquesta funció s'executa a l'Editor quan hi ha canvis a l'Inspector.
+        // Actualitza la cadena gameOverSceneName amb el nom de l'asset assignat.
+        private void OnValidate()
+        {
+            if (gameOverSceneAsset != null)
+            {
+                gameOverSceneName = gameOverSceneAsset.name;
+            }
+        }
+#endif
     }
 }

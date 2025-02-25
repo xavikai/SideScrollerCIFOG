@@ -11,6 +11,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/SideScroller.unity
     guid: 0b2ca05d196fbc44ba95cee92e734455
+  - enabled: 1
+    path: Assets/Scenes/Game Over.unity
+    guid: 25ed5d1870414cb489b191b5437fafa3
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0
