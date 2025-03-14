@@ -3608,6 +3608,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 431718845680142165, guid: f8824a6b359c93c4b8636713f649e993, type: 3}
+      propertyPath: respawn
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 431718845680142165, guid: f8824a6b359c93c4b8636713f649e993, type: 3}
+      propertyPath: platformType
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 431718845680142165, guid: f8824a6b359c93c4b8636713f649e993, type: 3}
+      propertyPath: targetPosition.z
+      value: 6.6
+      objectReference: {fileID: 0}
     - target: {fileID: 1725215171724295471, guid: f8824a6b359c93c4b8636713f649e993, type: 3}
       propertyPath: m_Name
       value: PlatformRoot
@@ -3618,11 +3630,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8950902496776353340, guid: f8824a6b359c93c4b8636713f649e993, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 1.11
       objectReference: {fileID: 0}
     - target: {fileID: 8950902496776353340, guid: f8824a6b359c93c4b8636713f649e993, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: 2.15
       objectReference: {fileID: 0}
     - target: {fileID: 8950902496776353340, guid: f8824a6b359c93c4b8636713f649e993, type: 3}
       propertyPath: m_LocalRotation.w
