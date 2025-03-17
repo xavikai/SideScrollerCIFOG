@@ -237,6 +237,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   pauseMenuUI: {fileID: 701204028}
+  resumeButton: {fileID: 0}
+  restartLevelButton: {fileID: 0}
+  mainMenuButton: {fileID: 0}
 --- !u!1001 &93436150
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -951,6 +954,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   pauseMenuUI: {fileID: 701204028}
+  resumeButton: {fileID: 2036817761}
+  restartLevelButton: {fileID: 924286062}
+  mainMenuButton: {fileID: 1282925511}
 --- !u!4 &578515503
 Transform:
   m_ObjectHideFlags: 0
@@ -2742,8 +2748,6 @@ MonoBehaviour:
   healthSlider: {fileID: 1527531873}
   staminaSlider: {fileID: 221234936}
   coinText: {fileID: 444261966}
-  maxHealth: 100
-  maxStamina: 100
 --- !u!4 &1519118034 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5482347919237533986, guid: 52d80ac47b68a22449caadbb48f11898, type: 3}
@@ -3531,7 +3535,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 578515502}
         m_TargetAssemblyTypeName: PauseMenuManager, Assembly-CSharp
-        m_MethodName: ResumeGame
+        m_MethodName: Resume
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

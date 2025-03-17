@@ -6,25 +6,10 @@ public class GameOverController : MonoBehaviour
     public Button restartLevelButton;
     public Button mainMenuButton;
 
-    void Start()
+    private void Start()
     {
-        if (restartLevelButton != null)
-        {
-            restartLevelButton.onClick.AddListener(RestartLevel);
-        }
-        else
-        {
-            Debug.LogWarning("Falta assignar el botó Restart Level al GameOverController!");
-        }
-
-        if (mainMenuButton != null)
-        {
-            mainMenuButton.onClick.AddListener(BackToMainMenu);
-        }
-        else
-        {
-            Debug.LogWarning("Falta assignar el botó Main Menu al GameOverController!");
-        }
+        restartLevelButton.onClick.AddListener(RestartLevel);
+        mainMenuButton.onClick.AddListener(GoToMainMenu);
     }
 
     private void RestartLevel()
@@ -32,9 +17,8 @@ public class GameOverController : MonoBehaviour
         GameManager.Instance.RestartLevel();
     }
 
-    private void BackToMainMenu()
+    private void GoToMainMenu()
     {
-        GameManager.Instance.ResetPlayerStats();
-        GameManager.Instance.LoadScene("MainMenu");
+        GameManager.Instance.GoToMainMenu();
     }
 }

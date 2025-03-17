@@ -1,88 +1,105 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public class PlayerStateManager : MonoBehaviour
 {
     public static PlayerStateManager Instance;
 
     [Header("Vida")]
-    public float maxHealth = 100f;
     public float currentHealth;
+    public float maxHealth = 100f;
 
     [Header("Estamina")]
-    public float maxStamina = 100f;
     public float currentStamina;
+    public float maxStamina = 100f;
+
+    [Tooltip("Velocitat a la qual es consumeix l'estamina mentre esprintes")]
     public float staminaDrainRate = 10f;
+
+    [Tooltip("Velocitat de regeneració de l'estamina quan no esprintes")]
     public float staminaRegenRate = 5f;
 
     [Header("Monedes")]
     public int currentCoins = 0;
 
+    [Header("Configuració singleton")]
+    [Tooltip("Activa per mantenir aquest objecte persistent entre escenes")]
+    public bool isPersistent = true;
+
     private void Awake()
     {
+        // Singleton pattern
         if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
             return;
         }
-        Instance = this;
-    }
 
-    private void Start()
-    {
-        ResetStats();
+        Instance = this;
+
+        if (isPersistent)
+        {
+            DontDestroyOnLoad(gameObject);
+        }
+
+        ResetPlayerState(); // Inicialitza els valors al començar
     }
 
     private void Update()
     {
-        RegenerateStamina();
+        RegenerateStamina(Time.deltaTime);
     }
 
-    public void ResetStats()
+    // 🔵 Inicialitza o reseteja l'estat del jugador (quan es comença un nivell nou)
+    public void ResetPlayerState()
     {
         currentHealth = maxHealth;
         currentStamina = maxStamina;
         currentCoins = 0;
     }
 
-    public void TakeDamage(float damage)
+    // 🔵 Assigna estat manualment (opcional)
+    public void SetPlayerState(float health, float stamina, int coins)
     {
-        currentHealth -= damage;
-        if (currentHealth < 0f)
-            currentHealth = 0f;
-
-        Debug.Log($"Player damaged! Vida actual: {currentHealth}");
-
-        if (currentHealth <= 0f)
-        {
-            Debug.Log("Jugador mort!");
-            // Aqu� pots cridar al GameManager per mostrar el Game Over
-        }
+        currentHealth = Mathf.Clamp(health, 0, maxHealth);
+        currentStamina = Mathf.Clamp(stamina, 0, maxStamina);
+        currentCoins = coins;
     }
 
-    public void AddCoins(int amount)
-    {
-        currentCoins += amount;
-        Debug.Log($"Has recollit {amount} monedes. Total: {currentCoins}");
-    }
-
+    // 🔵 Comprova si hi ha prou estamina per una acció i la consumeix si és possible
     public bool TryUseStamina(float amount)
     {
-        if (currentStamina > 0f)
+        if (currentStamina >= amount)
         {
-            currentStamina -= amount * Time.deltaTime;
-            if (currentStamina < 0f) currentStamina = 0f;
+            currentStamina -= amount;
             return true;
         }
+
         return false;
     }
 
-    private void RegenerateStamina()
+    // 🔵 Regenera estamina (es crida cada frame al Update)
+    private void RegenerateStamina(float deltaTime)
     {
-        if (!StarterAssets.ThirdPersonController.IsSprinting)
+        currentStamina = Mathf.Min(currentStamina + staminaRegenRate * deltaTime, maxStamina);
+    }
+
+    // 🔵 Afegeix monedes
+    public void AddCoins(int amount)
+    {
+        currentCoins += amount;
+        Debug.Log("Monedes actuals: " + currentCoins);
+    }
+
+    // 🔵 Rep dany i gestiona la mort
+    public void TakeDamage(float damage)
+    {
+        currentHealth -= damage;
+
+        if (currentHealth <= 0)
         {
-            currentStamina += staminaRegenRate * Time.deltaTime;
-            if (currentStamina > maxStamina)
-                currentStamina = maxStamina;
+            currentHealth = 0;
+            Debug.Log("El jugador ha mort!");
+            // Aquí pots notificar al GameManager o al PlayerUIController que estàs mort.
         }
     }
 }
