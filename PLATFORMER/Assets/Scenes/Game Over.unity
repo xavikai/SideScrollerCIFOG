@@ -491,8 +491,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+    rgba: 4279703536
+  m_fontColor: {r: 0.93962264, g: 0.0904165, b: 0.0904165, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -1108,6 +1108,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   restartButton: {fileID: 709458930}
   mainMenuButton: {fileID: 963472027}
+  gameScene: {fileID: 102900000, guid: 0b2ca05d196fbc44ba95cee92e734455, type: 3}
+  mainMenuScene: {fileID: 102900000, guid: 6bc3c3057cd47d64789db97c5251531b, type: 3}
+  gameSceneName: SideScroller
+  mainMenuSceneName: MainMenu
 --- !u!4 &1410032654
 Transform:
   m_ObjectHideFlags: 0
