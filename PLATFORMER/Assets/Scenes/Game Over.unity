@@ -1106,12 +1106,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d74c5c08579fba84ab8ab190ac61833e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  restartButton: {fileID: 709458930}
+  restartLevelButton: {fileID: 709458930}
   mainMenuButton: {fileID: 963472027}
-  gameScene: {fileID: 102900000, guid: 0b2ca05d196fbc44ba95cee92e734455, type: 3}
-  mainMenuScene: {fileID: 102900000, guid: 6bc3c3057cd47d64789db97c5251531b, type: 3}
-  gameSceneName: SideScroller
-  mainMenuSceneName: MainMenu
 --- !u!4 &1410032654
 Transform:
   m_ObjectHideFlags: 0

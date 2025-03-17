@@ -27,7 +27,6 @@ namespace StarterAssets
         public SceneAsset gameOverSceneAsset;
         public SceneAsset youWinSceneAsset;
 #endif
-
         [HideInInspector] public string gameOverSceneName;
         [HideInInspector] public string youWinSceneName;
 
@@ -35,42 +34,38 @@ namespace StarterAssets
         public int requiredCoinsToWin = 10;
         public bool hasReachedWinZone = false;
 
-        // Variables internes
         private float currentHealth;
         private float currentStamina;
         private int currentCoins;
 
-        // Propietat pública per accedir al nombre de monedes
         public int CurrentCoins => currentCoins;
-
         public bool CanSprint => currentStamina > 0;
 
         void Start()
         {
-            currentHealth = maxHealth;
-            currentStamina = maxStamina;
-            currentCoins = 0;
-
-            if (healthSlider != null)
+            if (GameManager.Instance != null)
             {
-                healthSlider.minValue = 0;
-                healthSlider.maxValue = maxHealth;
-                healthSlider.value = currentHealth;
+                GameManager.Instance.LoadPlayerState(this);
+            }
+            else
+            {
+                ResetLocalStats();
             }
 
-            if (staminaSlider != null)
-            {
-                staminaSlider.minValue = 0;
-                staminaSlider.maxValue = maxStamina;
-                staminaSlider.value = currentStamina;
-            }
-
+            UpdateSliders();
             UpdateCoinUI();
         }
 
         void Update()
         {
             HandleStamina();
+        }
+
+        private void ResetLocalStats()
+        {
+            currentHealth = maxHealth;
+            currentStamina = maxStamina;
+            currentCoins = 0;
         }
 
         private void HandleStamina()
@@ -86,68 +81,35 @@ namespace StarterAssets
                 if (currentStamina > maxStamina) currentStamina = maxStamina;
             }
 
-            if (staminaSlider != null)
-            {
-                staminaSlider.value = currentStamina;
-            }
-        }
-
-        public void UpdateHealth(float newHealth)
-        {
-            currentHealth = Mathf.Clamp(newHealth, 0, maxHealth);
-            if (healthSlider != null) healthSlider.value = currentHealth;
-
-            Debug.Log("Vida restant: " + currentHealth);
-            if (currentHealth <= 0)
-            {
-                Die();
-            }
+            UpdateSliders();
+            SaveState();
         }
 
         public void TakeDamage(float damage)
         {
             currentHealth -= damage;
             if (currentHealth < 0) currentHealth = 0;
-            if (healthSlider != null) healthSlider.value = currentHealth;
 
-            Debug.Log("Vida restant: " + currentHealth);
+            UpdateSliders();
+            SaveState();
+
             if (currentHealth <= 0)
             {
                 Die();
             }
         }
 
-        public void UpdateStamina(float newStamina)
-        {
-            currentStamina = Mathf.Clamp(newStamina, 0, maxStamina);
-            if (staminaSlider != null) staminaSlider.value = currentStamina;
-        }
-
         public void AddCoins(int amount)
         {
             currentCoins += amount;
             UpdateCoinUI();
-            Debug.Log("Monedes actuals: " + currentCoins);
-        }
-
-        public void RemoveCoins(int amount)
-        {
-            currentCoins -= amount;
-            if (currentCoins < 0) currentCoins = 0;
-            UpdateCoinUI();
-        }
-
-        private void UpdateCoinUI()
-        {
-            if (coinText != null)
-            {
-                coinText.text = "Monedes: " + currentCoins.ToString();
-            }
+            SaveState();
         }
 
         private void Die()
         {
             Debug.Log("El jugador ha mort. Carregant Game Over...");
+
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
 
@@ -161,9 +123,10 @@ namespace StarterAssets
             }
         }
 
-        public void Win()
+        public void Win()  // ARA PUBLIC
         {
             Debug.Log("El jugador ha guanyat! Carregant escena de victòria...");
+
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
 
@@ -177,18 +140,47 @@ namespace StarterAssets
             }
         }
 
+        private void UpdateSliders()
+        {
+            if (healthSlider != null)
+                healthSlider.value = currentHealth;
+
+            if (staminaSlider != null)
+                staminaSlider.value = currentStamina;
+        }
+
+        private void UpdateCoinUI()
+        {
+            if (coinText != null)
+                coinText.text = "Monedes: " + currentCoins;
+        }
+
+        private void SaveState()
+        {
+            if (GameManager.Instance != null)
+            {
+                GameManager.Instance.SavePlayerState(currentHealth, currentStamina, currentCoins);
+            }
+        }
+
+        public void SetValues(float health, float stamina, int coins)
+        {
+            currentHealth = health;
+            currentStamina = stamina;
+            currentCoins = coins;
+
+            UpdateSliders();
+            UpdateCoinUI();
+        }
+
 #if UNITY_EDITOR
         private void OnValidate()
         {
             if (gameOverSceneAsset != null)
-            {
                 gameOverSceneName = gameOverSceneAsset.name;
-            }
 
             if (youWinSceneAsset != null)
-            {
                 youWinSceneName = youWinSceneAsset.name;
-            }
         }
 #endif
     }

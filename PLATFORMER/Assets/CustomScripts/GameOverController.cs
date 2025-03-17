@@ -1,114 +1,40 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 public class GameOverController : MonoBehaviour
 {
-    [Header("Botons")]
-    public Button restartButton;
+    public Button restartLevelButton;
     public Button mainMenuButton;
-
-    [Header("Assigna les escenes arrossegant-les aquí (Editor només)")]
-#if UNITY_EDITOR
-    public SceneAsset gameScene;
-    public SceneAsset mainMenuScene;
-#endif
-
-    [Header("Noms de les escenes (es posen sols, no toquis!)")]
-    public string gameSceneName;
-    public string mainMenuSceneName;
-
-    [Header("Música de l'escena")]
-    [Tooltip("Arrossega aquí el clip de música per la pantalla de Game Over")]
-    public AudioClip musicClip;
-
-    [Range(0f, 1f)]
-    [Tooltip("Volum de la música de Game Over")]
-    public float musicVolume = 0.5f;
-
-    private AudioSource musicSource;
-
-#if UNITY_EDITOR
-    private void OnValidate()
-    {
-        if (gameScene != null)
-        {
-            gameSceneName = gameScene.name;
-            EditorUtility.SetDirty(this);
-        }
-
-        if (mainMenuScene != null)
-        {
-            mainMenuSceneName = mainMenuScene.name;
-            EditorUtility.SetDirty(this);
-        }
-    }
-#endif
 
     void Start()
     {
-        Cursor.visible = true;
-        Cursor.lockState = CursorLockMode.None;
-
-        if (restartButton != null)
-            restartButton.onClick.AddListener(RestartGame);
+        if (restartLevelButton != null)
+        {
+            restartLevelButton.onClick.AddListener(RestartLevel);
+        }
         else
-            Debug.LogWarning("No s'ha assignat el botó de restart.");
+        {
+            Debug.LogWarning("Falta assignar el botó Restart Level al GameOverController!");
+        }
 
         if (mainMenuButton != null)
-            mainMenuButton.onClick.AddListener(GoToMainMenu);
-        else
-            Debug.LogWarning("No s'ha assignat el botó de menú principal.");
-
-        SetupMusic();
-    }
-
-    private void SetupMusic()
-    {
-        if (musicClip != null)
         {
-            musicSource = gameObject.AddComponent<AudioSource>();
-            musicSource.clip = musicClip;
-            musicSource.loop = true;
-            musicSource.playOnAwake = false;
-            musicSource.volume = musicVolume;
-            musicSource.Play();
+            mainMenuButton.onClick.AddListener(BackToMainMenu);
         }
         else
         {
-            Debug.LogWarning("No s'ha assignat cap música a l'escena Game Over!");
+            Debug.LogWarning("Falta assignar el botó Main Menu al GameOverController!");
         }
     }
 
-    public void RestartGame()
+    private void RestartLevel()
     {
-        if (!string.IsNullOrEmpty(gameSceneName))
-        {
-            Cursor.visible = false;
-            Cursor.lockState = CursorLockMode.Locked;
-            SceneManager.LoadScene(gameSceneName);
-        }
-        else
-        {
-            Debug.LogError("No s'ha assignat cap escena de joc!");
-        }
+        GameManager.Instance.RestartLevel();
     }
 
-    public void GoToMainMenu()
+    private void BackToMainMenu()
     {
-        if (!string.IsNullOrEmpty(mainMenuSceneName))
-        {
-            Cursor.visible = true;
-            Cursor.lockState = CursorLockMode.None;
-            SceneManager.LoadScene(mainMenuSceneName);
-        }
-        else
-        {
-            Debug.LogError("No s'ha assignat cap escena de menú principal!");
-        }
+        GameManager.Instance.ResetPlayerStats();
+        GameManager.Instance.LoadScene("MainMenu");
     }
 }
