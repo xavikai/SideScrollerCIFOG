@@ -27,6 +27,7 @@ namespace StarterAssets
         public SceneAsset gameOverSceneAsset;
         public SceneAsset youWinSceneAsset;
 #endif
+
         [HideInInspector] public string gameOverSceneName;
         [HideInInspector] public string youWinSceneName;
 
@@ -70,7 +71,6 @@ namespace StarterAssets
         void Update()
         {
             HandleStamina();
-            CheckWinCondition();
         }
 
         private void HandleStamina()
@@ -145,14 +145,6 @@ namespace StarterAssets
             }
         }
 
-        private void CheckWinCondition()
-        {
-            if (hasReachedWinZone && currentCoins >= requiredCoinsToWin)
-            {
-                Win();
-            }
-        }
-
         private void Die()
         {
             Debug.Log("El jugador ha mort. Carregant Game Over...");
@@ -169,7 +161,7 @@ namespace StarterAssets
             }
         }
 
-        public void Win() // Ara públic
+        public void Win()
         {
             Debug.Log("El jugador ha guanyat! Carregant escena de victòria...");
             Cursor.visible = true;

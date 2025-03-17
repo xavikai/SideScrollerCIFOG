@@ -9,21 +9,28 @@ using UnityEditor;
 public class YouWinController : MonoBehaviour
 {
     [Header("Botons")]
-    [Tooltip("Botó per reiniciar el joc")]
     public Button restartButton;
-
-    [Tooltip("Botó per tornar al menú principal")]
     public Button mainMenuButton;
 
     [Header("Assigna les escenes arrossegant-les aquí (Editor només)")]
 #if UNITY_EDITOR
-    public SceneAsset gameScene;         // Escena del joc
-    public SceneAsset mainMenuScene;     // Escena del menú principal
+    public SceneAsset gameScene;
+    public SceneAsset mainMenuScene;
 #endif
 
     [Header("Noms de les escenes (es posen sols, no toquis!)")]
-    public string gameSceneName;         // Es fa servir en runtime
+    public string gameSceneName;
     public string mainMenuSceneName;
+
+    [Header("Música de l'escena")]
+    [Tooltip("Arrossega aquí el clip de música per la pantalla de victòria")]
+    public AudioClip musicClip;
+
+    [Range(0f, 1f)]
+    [Tooltip("Volum de la música de victòria")]
+    public float musicVolume = 0.5f;
+
+    private AudioSource musicSource;
 
 #if UNITY_EDITOR
     private void OnValidate()
@@ -44,11 +51,9 @@ public class YouWinController : MonoBehaviour
 
     void Start()
     {
-        // Mostrar i desbloquejar el cursor (imprescindible per UI)
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
 
-        // Assigna els listeners als botons
         if (restartButton != null)
             restartButton.onClick.AddListener(RestartGame);
         else
@@ -58,6 +63,25 @@ public class YouWinController : MonoBehaviour
             mainMenuButton.onClick.AddListener(GoToMainMenu);
         else
             Debug.LogWarning("No s'ha assignat el botó de menú principal.");
+
+        SetupMusic();
+    }
+
+    private void SetupMusic()
+    {
+        if (musicClip != null)
+        {
+            musicSource = gameObject.AddComponent<AudioSource>();
+            musicSource.clip = musicClip;
+            musicSource.loop = true;
+            musicSource.playOnAwake = false;
+            musicSource.volume = musicVolume;
+            musicSource.Play();
+        }
+        else
+        {
+            Debug.LogWarning("No s'ha assignat cap música a l'escena You Win!");
+        }
     }
 
     public void RestartGame()
@@ -66,7 +90,6 @@ public class YouWinController : MonoBehaviour
         {
             Cursor.visible = false;
             Cursor.lockState = CursorLockMode.Locked;
-
             SceneManager.LoadScene(gameSceneName);
         }
         else
@@ -81,7 +104,6 @@ public class YouWinController : MonoBehaviour
         {
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
-
             SceneManager.LoadScene(mainMenuSceneName);
         }
         else

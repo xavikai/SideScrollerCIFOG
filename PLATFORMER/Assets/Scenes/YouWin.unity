@@ -1110,6 +1110,8 @@ MonoBehaviour:
   mainMenuScene: {fileID: 102900000, guid: 6bc3c3057cd47d64789db97c5251531b, type: 3}
   gameSceneName: SideScroller
   mainMenuSceneName: MainMenu
+  musicClip: {fileID: 0}
+  musicVolume: 0.5
 --- !u!4 &1448149504
 Transform:
   m_ObjectHideFlags: 0

@@ -9,30 +9,36 @@ using UnityEditor;
 public class GameOverController : MonoBehaviour
 {
     [Header("Botons")]
-    [Tooltip("Botó per reiniciar el joc")]
     public Button restartButton;
-
-    [Tooltip("Botó per tornar al menú principal")]
     public Button mainMenuButton;
 
     [Header("Assigna les escenes arrossegant-les aquí (Editor només)")]
 #if UNITY_EDITOR
-    public SceneAsset gameScene;         // Escena del joc
-    public SceneAsset mainMenuScene;     // Escena del menú principal
+    public SceneAsset gameScene;
+    public SceneAsset mainMenuScene;
 #endif
 
     [Header("Noms de les escenes (es posen sols, no toquis!)")]
-    public string gameSceneName;         // Es fa servir en runtime
+    public string gameSceneName;
     public string mainMenuSceneName;
 
+    [Header("Música de l'escena")]
+    [Tooltip("Arrossega aquí el clip de música per la pantalla de Game Over")]
+    public AudioClip musicClip;
+
+    [Range(0f, 1f)]
+    [Tooltip("Volum de la música de Game Over")]
+    public float musicVolume = 0.5f;
+
+    private AudioSource musicSource;
+
 #if UNITY_EDITOR
-    // Aquesta funció es crida automàticament quan canvies alguna cosa a l'inspector
     private void OnValidate()
     {
         if (gameScene != null)
         {
             gameSceneName = gameScene.name;
-            EditorUtility.SetDirty(this); // Guarda el canvi a l'inspector
+            EditorUtility.SetDirty(this);
         }
 
         if (mainMenuScene != null)
@@ -45,11 +51,9 @@ public class GameOverController : MonoBehaviour
 
     void Start()
     {
-        // Mostrar i desbloquejar el cursor (imprescindible per UI)
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
 
-        // Assigna els listeners als botons (millor aquí que des de l'inspector)
         if (restartButton != null)
             restartButton.onClick.AddListener(RestartGame);
         else
@@ -59,16 +63,33 @@ public class GameOverController : MonoBehaviour
             mainMenuButton.onClick.AddListener(GoToMainMenu);
         else
             Debug.LogWarning("No s'ha assignat el botó de menú principal.");
+
+        SetupMusic();
+    }
+
+    private void SetupMusic()
+    {
+        if (musicClip != null)
+        {
+            musicSource = gameObject.AddComponent<AudioSource>();
+            musicSource.clip = musicClip;
+            musicSource.loop = true;
+            musicSource.playOnAwake = false;
+            musicSource.volume = musicVolume;
+            musicSource.Play();
+        }
+        else
+        {
+            Debug.LogWarning("No s'ha assignat cap música a l'escena Game Over!");
+        }
     }
 
     public void RestartGame()
     {
         if (!string.IsNullOrEmpty(gameSceneName))
         {
-            // Bloqueja el cursor si el teu joc ho necessita
             Cursor.visible = false;
             Cursor.lockState = CursorLockMode.Locked;
-
             SceneManager.LoadScene(gameSceneName);
         }
         else
@@ -81,10 +102,8 @@ public class GameOverController : MonoBehaviour
     {
         if (!string.IsNullOrEmpty(mainMenuSceneName))
         {
-            // Mostrem el cursor al menú per si de cas
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
-
             SceneManager.LoadScene(mainMenuSceneName);
         }
         else

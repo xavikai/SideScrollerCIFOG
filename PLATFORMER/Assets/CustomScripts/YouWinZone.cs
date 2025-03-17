@@ -4,7 +4,7 @@ namespace StarterAssets
 {
     public class YouWinZone : MonoBehaviour
     {
-        [Tooltip("Assigna el PlayerUIController manualment des de l'Inspector")]
+        [Tooltip("Referència al PlayerUIController (arrossega-ho des de l'Inspector)")]
         public PlayerUIController playerUIController;
 
         private void OnTriggerEnter(Collider other)
@@ -15,20 +15,21 @@ namespace StarterAssets
 
                 if (playerUIController != null)
                 {
-                    playerUIController.hasReachedWinZone = true;
-
                     if (playerUIController.CurrentCoins >= playerUIController.requiredCoinsToWin)
                     {
+                        Debug.Log("Jugador ha complert totes les condicions! YOU WIN!");
                         playerUIController.Win();
                     }
                     else
                     {
-                        Debug.Log("Encara falten monedes! Monedes actuals: " + playerUIController.CurrentCoins);
+                        int coinsLeft = playerUIController.requiredCoinsToWin - playerUIController.CurrentCoins;
+                        Debug.Log($"Et falten {coinsLeft} monedes per guanyar. Torna quan les tinguis!");
+                        // Aquí pots afegir codi per mostrar un missatge en pantalla si vols
                     }
                 }
                 else
                 {
-                    Debug.LogWarning("PlayerUIController no assignat!");
+                    Debug.LogWarning("No s'ha assignat el PlayerUIController al YouWinZone!");
                 }
             }
         }
