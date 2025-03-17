@@ -1,13 +1,7 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using System.Collections;
-using StarterAssets;
-
-
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 public class GameManager : MonoBehaviour
 {
@@ -18,21 +12,17 @@ public class GameManager : MonoBehaviour
     public float playerStamina = 100f;
     public int playerCoins = 0;
 
-    [Header("Control del Fade")]
-    public Image fadeImage;
+    [Header("Fade Control")]
+    public Image fadeImage;              // Arrossega el FadeImage des del Canvas de l'escena inicial (MainMenu)
     public float fadeInDuration = 1f;
     public float fadeOutDuration = 1f;
 
-    [Header("Escenes del Joc")]
-#if UNITY_EDITOR
-    [Tooltip("Escena inicial del joc. Arrossega aqu� la escena!")]
-    public SceneAsset firstLevelScene;
-#endif
-    [HideInInspector]
-    public string firstLevelSceneName;
+    [Header("Nom de l'escena inicial")]
+    public string firstLevelSceneName = "Level1";    // Nom de l'escena del primer nivell
 
     private void Awake()
     {
+        // Singleton Pattern ➜ assegura que només hi hagi un GameManager persistent
         if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
@@ -45,24 +35,14 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
+        // Inicia FadeIn si es troba la imatge
         if (fadeImage != null)
         {
             StartCoroutine(FadeIn());
         }
     }
 
-#if UNITY_EDITOR
-    private void OnValidate()
-    {
-        if (firstLevelScene != null)
-        {
-            firstLevelSceneName = firstLevelScene.name;
-            EditorUtility.SetDirty(this);
-        }
-    }
-#endif
-
-    #region Funcions Estat del Jugador
+    #region Funcions d'estat del jugador
 
     public void ResetPlayerStats()
     {
@@ -70,7 +50,7 @@ public class GameManager : MonoBehaviour
         playerStamina = 100f;
         playerCoins = 0;
 
-        Debug.Log("Estat del jugador reiniciat a valors inicials!");
+        Debug.Log("✅ Estadístiques del jugador reiniciades!");
     }
 
     public void SavePlayerState(float health, float stamina, int coins)
@@ -79,25 +59,27 @@ public class GameManager : MonoBehaviour
         playerStamina = stamina;
         playerCoins = coins;
 
-        Debug.Log($"Estat guardat -> Vida: {playerHealth}, Estamina: {playerStamina}, Monedes: {playerCoins}");
+        Debug.Log($"💾 Estat del jugador guardat ➜ Vida: {playerHealth}, Estamina: {playerStamina}, Monedes: {playerCoins}");
     }
 
-    public void LoadPlayerState(PlayerUIController controller)
+    public void LoadPlayerState(PlayerStateManager playerState)
     {
-        if (controller == null)
+        if (playerState == null)
         {
-            Debug.LogWarning("No s'ha proporcionat cap PlayerUIController per carregar estat!");
+            Debug.LogWarning("⚠️ No s'ha trobat el PlayerStateManager per carregar estat!");
             return;
         }
 
-        controller.SetValues(playerHealth, playerStamina, playerCoins);
+        playerState.currentHealth = playerHealth;
+        playerState.currentStamina = playerStamina;
+        playerState.currentCoins = playerCoins;
 
-        Debug.Log($"Estat carregat al PlayerUIController -> Vida: {playerHealth}, Estamina: {playerStamina}, Monedes: {playerCoins}");
+        Debug.Log($"📥 Estat del jugador carregat ➜ Vida: {playerHealth}, Estamina: {playerStamina}, Monedes: {playerCoins}");
     }
 
     #endregion
 
-    #region Funcions de Joc
+    #region Funcions de joc i escenes
 
     public void StartNewGame()
     {
@@ -105,11 +87,11 @@ public class GameManager : MonoBehaviour
 
         if (!string.IsNullOrEmpty(firstLevelSceneName))
         {
-            StartCoroutine(LoadSceneWithFade(firstLevelSceneName));
+            LoadScene(firstLevelSceneName);
         }
         else
         {
-            Debug.LogError("No s'ha assignat cap escena inicial al GameManager!");
+            Debug.LogError("❌ No s'ha especificat el nom de l'escena inicial!");
         }
     }
 
@@ -117,37 +99,41 @@ public class GameManager : MonoBehaviour
     {
         ResetPlayerStats();
 
-        string currentSceneName = SceneManager.GetActiveScene().name;
-        Debug.Log($"Reiniciant nivell actual: {currentSceneName}");
+        string currentScene = SceneManager.GetActiveScene().name;
+        Debug.Log("🔄 Reiniciant nivell actual: " + currentScene);
 
-        StartCoroutine(LoadSceneWithFade(currentSceneName));
+        LoadScene(currentScene);
+    }
+
+    public void GoToMainMenu()
+    {
+        Debug.Log("🏠 Tornant al Main Menu...");
+
+        ResetPlayerStats();
+
+        LoadScene("MainMenu");
     }
 
     public void LoadScene(string sceneName)
     {
-        if (string.IsNullOrEmpty(sceneName))
-        {
-            Debug.LogError("No s'ha proporcionat cap nom d'escena!");
-            return;
-        }
-
         StartCoroutine(LoadSceneWithFade(sceneName));
     }
 
     public void QuitGame()
     {
-        Debug.Log("Sortint del joc...");
+        Debug.Log("🚪 Sortint del joc...");
         Application.Quit();
     }
 
     #endregion
 
-    #region Gesti� de Canvi d'Escena amb Fade
+    #region Gestió de canvi d'escena amb Fade
 
     private IEnumerator LoadSceneWithFade(string sceneName)
     {
-        Debug.Log($"Carregant escena: {sceneName}");
+        Debug.Log($"🔀 Carregant escena: {sceneName}");
 
+        // FadeOut abans de carregar
         if (fadeImage != null)
         {
             yield return StartCoroutine(FadeOut());
@@ -156,8 +142,10 @@ public class GameManager : MonoBehaviour
         SceneManager.LoadScene(sceneName);
         yield return null;
 
+        // Buscar de nou el FadeImage a la nova escena
         FindFadeImage();
 
+        // FadeIn després de carregar
         if (fadeImage != null)
         {
             yield return StartCoroutine(FadeIn());
@@ -173,11 +161,11 @@ public class GameManager : MonoBehaviour
             if (fadeObj != null)
             {
                 fadeImage = fadeObj.GetComponent<Image>();
-                Debug.Log("FadeImage trobat i assignat autom�ticament.");
+                Debug.Log("✅ FadeImage trobat i assignat automàticament.");
             }
             else
             {
-                Debug.LogWarning("FadeImage no trobat a l'escena nova! Assegura't que hi �s.");
+                Debug.LogWarning("⚠️ FadeImage no trobat a l'escena nova!");
             }
         }
     }
@@ -190,19 +178,19 @@ public class GameManager : MonoBehaviour
     {
         if (fadeImage == null)
         {
-            Debug.LogWarning("FadeImage no assignada al FadeIn!");
+            Debug.LogWarning("⚠️ No hi ha FadeImage per fer FadeIn!");
             yield break;
         }
 
-        float elapsedTime = 0f;
+        float elapsed = 0f;
         Color c = fadeImage.color;
         c.a = 1f;
         fadeImage.color = c;
 
-        while (elapsedTime < fadeInDuration)
+        while (elapsed < fadeInDuration)
         {
-            elapsedTime += Time.deltaTime;
-            c.a = 1 - Mathf.Clamp01(elapsedTime / fadeInDuration);
+            elapsed += Time.deltaTime;
+            c.a = 1 - Mathf.Clamp01(elapsed / fadeInDuration);
             fadeImage.color = c;
             yield return null;
         }
@@ -215,19 +203,19 @@ public class GameManager : MonoBehaviour
     {
         if (fadeImage == null)
         {
-            Debug.LogWarning("FadeImage no assignada al FadeOut!");
+            Debug.LogWarning("⚠️ No hi ha FadeImage per fer FadeOut!");
             yield break;
         }
 
-        float elapsedTime = 0f;
+        float elapsed = 0f;
         Color c = fadeImage.color;
         c.a = 0f;
         fadeImage.color = c;
 
-        while (elapsedTime < fadeOutDuration)
+        while (elapsed < fadeOutDuration)
         {
-            elapsedTime += Time.deltaTime;
-            c.a = Mathf.Clamp01(elapsedTime / fadeOutDuration);
+            elapsed += Time.deltaTime;
+            c.a = Mathf.Clamp01(elapsed / fadeOutDuration);
             fadeImage.color = c;
             yield return null;
         }

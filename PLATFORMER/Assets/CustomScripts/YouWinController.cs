@@ -1,33 +1,35 @@
-using StarterAssets;
-using UnityEngine;
+Ôªøusing UnityEngine;
+using UnityEngine.UI;
 
-public class YouWinZone : MonoBehaviour
+public class YouWinController : MonoBehaviour
 {
-    [Header("Requisits de victÚria")]
-    public int requiredCoins = 4;  // Nombre mÌnim de monedes necess‡ries per guanyar
+    [Header("Botons")]
+    public Button restartLevelButton;
+    public Button mainMenuButton;
 
-    private void OnTriggerEnter(Collider other)
+    private void Start()
     {
-        if (other.CompareTag("Player"))
-        {
-            PlayerUIController playerUI = other.GetComponent<PlayerUIController>();
+        // Mostrar el cursor per assegurar que es pot interactuar
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
 
-            if (playerUI != null)
-            {
-                if (playerUI.CurrentCoins >= requiredCoins)
-                {
-                    playerUI.hasReachedWinZone = true;
-                    playerUI.Win();
-                }
-                else
-                {
-                    Debug.Log($"Encara et falten monedes! {playerUI.CurrentCoins}/{requiredCoins}");
-                }
-            }
-            else
-            {
-                Debug.LogWarning("El Player no tÈ el PlayerUIController assignat!");
-            }
-        }
+        // Afegir listeners als botons
+        restartLevelButton.onClick.AddListener(RestartLevel);
+        mainMenuButton.onClick.AddListener(GoToMainMenu);
+    }
+
+    public void RestartLevel()
+    {
+        Debug.Log("üîÑ Reiniciant el nivell!");
+        GameManager.Instance.RestartLevel();
+    }
+
+    public void GoToMainMenu()
+    {
+        Debug.Log("üè† Tornant al men√∫ principal!");
+        GameManager.Instance.LoadScene("MainMenu");
+
+        // Reiniciem stats si tornem al men√∫ principal
+        GameManager.Instance.ResetPlayerStats();
     }
 }
