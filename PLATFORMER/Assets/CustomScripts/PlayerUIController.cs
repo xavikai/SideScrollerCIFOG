@@ -11,37 +11,38 @@ namespace StarterAssets
 {
     public class PlayerUIController : MonoBehaviour
     {
-        // Elements de la UI, assignats des de l'Inspector
+        [Header("UI")]
         public Slider healthSlider;
         public Slider staminaSlider;
         public TMP_Text coinText;
 
-        // Valors màxims
+        [Header("Vida i Estamina")]
         public float maxHealth = 100f;
         public float maxStamina = 100f;
+        public float runStaminaDrainRate = 10f;
+        public float staminaRegenRate = 5f;
 
-        // Variables públiques per controlar el drenatge i regeneració de l'estamina
-        public float runStaminaDrainRate = 10f;  // Estamina perduda per segon mentre sprintes
-        public float staminaRegenRate = 5f;      // Estamina regenerada per segon quan no sprintes
-
-        // Variable per assignar l'asset de la escena Game Over (només visible a l'Editor)
 #if UNITY_EDITOR
+        [Header("Scenes (Editor)")]
         public SceneAsset gameOverSceneAsset;
+        public SceneAsset youWinSceneAsset;
 #endif
-        // Aquesta cadena es carrega automàticament amb el nom de l'asset GameOver
-        [HideInInspector]
-        public string gameOverSceneName;
+        [HideInInspector] public string gameOverSceneName;
+        [HideInInspector] public string youWinSceneName;
 
-        // Variables internes per als valors actuals
+        [Header("Condicions de Victòria")]
+        public int requiredCoinsToWin = 10;
+        public bool hasReachedWinZone = false;
+
+        // Variables internes
         private float currentHealth;
         private float currentStamina;
         private int currentCoins;
 
-        // Propietat per saber si es pot sprintar (retorna true si encara hi ha estamina)
-        public bool CanSprint
-        {
-            get { return currentStamina > 0; }
-        }
+        // Propietat pública per accedir al nombre de monedes
+        public int CurrentCoins => currentCoins;
+
+        public bool CanSprint => currentStamina > 0;
 
         void Start()
         {
@@ -68,18 +69,21 @@ namespace StarterAssets
 
         void Update()
         {
-            // Drena l'estamina quan es manté apretat Shift, i la regenera quan no
+            HandleStamina();
+            CheckWinCondition();
+        }
+
+        private void HandleStamina()
+        {
             if (Input.GetKey(KeyCode.LeftShift))
             {
                 currentStamina -= runStaminaDrainRate * Time.deltaTime;
-                if (currentStamina < 0)
-                    currentStamina = 0;
+                if (currentStamina < 0) currentStamina = 0;
             }
             else
             {
                 currentStamina += staminaRegenRate * Time.deltaTime;
-                if (currentStamina > maxStamina)
-                    currentStamina = maxStamina;
+                if (currentStamina > maxStamina) currentStamina = maxStamina;
             }
 
             if (staminaSlider != null)
@@ -91,10 +95,8 @@ namespace StarterAssets
         public void UpdateHealth(float newHealth)
         {
             currentHealth = Mathf.Clamp(newHealth, 0, maxHealth);
-            if (healthSlider != null)
-            {
-                healthSlider.value = currentHealth;
-            }
+            if (healthSlider != null) healthSlider.value = currentHealth;
+
             Debug.Log("Vida restant: " + currentHealth);
             if (currentHealth <= 0)
             {
@@ -102,16 +104,12 @@ namespace StarterAssets
             }
         }
 
-        // Aquest mètode rep dany i actualitza la salut
         public void TakeDamage(float damage)
         {
             currentHealth -= damage;
-            if (currentHealth < 0)
-                currentHealth = 0;
-            if (healthSlider != null)
-            {
-                healthSlider.value = currentHealth;
-            }
+            if (currentHealth < 0) currentHealth = 0;
+            if (healthSlider != null) healthSlider.value = currentHealth;
+
             Debug.Log("Vida restant: " + currentHealth);
             if (currentHealth <= 0)
             {
@@ -122,23 +120,20 @@ namespace StarterAssets
         public void UpdateStamina(float newStamina)
         {
             currentStamina = Mathf.Clamp(newStamina, 0, maxStamina);
-            if (staminaSlider != null)
-            {
-                staminaSlider.value = currentStamina;
-            }
+            if (staminaSlider != null) staminaSlider.value = currentStamina;
         }
 
         public void AddCoins(int amount)
         {
             currentCoins += amount;
             UpdateCoinUI();
+            Debug.Log("Monedes actuals: " + currentCoins);
         }
 
         public void RemoveCoins(int amount)
         {
             currentCoins -= amount;
-            if (currentCoins < 0)
-                currentCoins = 0;
+            if (currentCoins < 0) currentCoins = 0;
             UpdateCoinUI();
         }
 
@@ -150,10 +145,20 @@ namespace StarterAssets
             }
         }
 
-        // Aquesta funció s'executa quan la salut arriba a 0: carrega l'escena Game Over
+        private void CheckWinCondition()
+        {
+            if (hasReachedWinZone && currentCoins >= requiredCoinsToWin)
+            {
+                Win();
+            }
+        }
+
         private void Die()
         {
             Debug.Log("El jugador ha mort. Carregant Game Over...");
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
+
             if (!string.IsNullOrEmpty(gameOverSceneName))
             {
                 SceneManager.LoadScene(gameOverSceneName);
@@ -164,14 +169,33 @@ namespace StarterAssets
             }
         }
 
+        public void Win() // Ara públic
+        {
+            Debug.Log("El jugador ha guanyat! Carregant escena de victòria...");
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
+
+            if (!string.IsNullOrEmpty(youWinSceneName))
+            {
+                SceneManager.LoadScene(youWinSceneName);
+            }
+            else
+            {
+                Debug.LogWarning("No s'ha assignat l'asset de You Win.");
+            }
+        }
+
 #if UNITY_EDITOR
-        // Aquesta funció s'executa a l'Editor quan hi ha canvis a l'Inspector.
-        // Actualitza la cadena gameOverSceneName amb el nom de l'asset assignat.
         private void OnValidate()
         {
             if (gameOverSceneAsset != null)
             {
                 gameOverSceneName = gameOverSceneAsset.name;
+            }
+
+            if (youWinSceneAsset != null)
+            {
+                youWinSceneName = youWinSceneAsset.name;
             }
         }
 #endif

@@ -402,7 +402,11 @@ MonoBehaviour:
   runStaminaDrainRate: 10
   staminaRegenRate: 5
   gameOverSceneAsset: {fileID: 102900000, guid: 25ed5d1870414cb489b191b5437fafa3, type: 3}
+  youWinSceneAsset: {fileID: 102900000, guid: 0298e48949713d6449375c5d0c09c341, type: 3}
   gameOverSceneName: Game Over
+  youWinSceneName: YouWin
+  requiredCoinsToWin: 0
+  hasReachedWinZone: 0
 --- !u!4 &336470611
 Transform:
   m_ObjectHideFlags: 0
@@ -2063,6 +2067,73 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 473969055}
   m_SourcePrefab: {fileID: 100100000, guid: 83dff313d793b0544b0b41828a158cf7, type: 3}
+--- !u!1 &1267298751
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1267298753}
+  - component: {fileID: 1267298752}
+  - component: {fileID: 1267298754}
+  m_Layer: 0
+  m_Name: YouWinZone
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!65 &1267298752
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1267298751}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 2.810016, z: 2.667159}
+  m_Center: {x: 0, y: 0.5587319, z: -0.1348176}
+--- !u!4 &1267298753
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1267298751}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 3.64, y: 0.88, z: 10.05}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1267298754
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1267298751}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 971ad79214a519343b3b4e71a1ea78db, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerUIController: {fileID: 336470610}
 --- !u!1 &1282925509
 GameObject:
   m_ObjectHideFlags: 0
@@ -4702,3 +4773,4 @@ SceneRoots:
   - {fileID: 336470611}
   - {fileID: 4271020549389299003}
   - {fileID: 4549639807256106266}
+  - {fileID: 1267298753}
