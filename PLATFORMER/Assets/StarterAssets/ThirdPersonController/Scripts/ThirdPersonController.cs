@@ -41,7 +41,6 @@ namespace StarterAssets
         public AudioClip footstepSound;
         public AudioClip landingSound;
 
-        // PRIVATES
         private float _cinemachineTargetYaw;
         private float _cinemachineTargetPitch;
         private float _speed;
@@ -69,6 +68,8 @@ namespace StarterAssets
         private int _animIDFreeFall;
 
         private const float _threshold = 0.01f;
+
+        public static bool IsSprinting { get; private set; }
 
         private bool IsCurrentDeviceMouse
         {
@@ -139,9 +140,26 @@ namespace StarterAssets
 
         private void Move()
         {
-            float targetSpeed = _input.sprint ? SprintSpeed : MoveSpeed;
+            float targetSpeed = MoveSpeed;
+            IsSprinting = false;
 
-            if (_input.move == Vector2.zero) targetSpeed = 0.0f;
+            if (_input.sprint && _input.move != Vector2.zero)
+            {
+                if (PlayerStateManager.Instance.TryUseStamina(PlayerStateManager.Instance.staminaDrainRate))
+                {
+                    targetSpeed = SprintSpeed;
+                    IsSprinting = true;
+                }
+                else
+                {
+                    targetSpeed = MoveSpeed;
+                }
+            }
+
+            if (_input.move == Vector2.zero)
+            {
+                targetSpeed = 0.0f;
+            }
 
             float currentHorizontalSpeed = new Vector3(_controller.velocity.x, 0.0f, _controller.velocity.z).magnitude;
 
@@ -159,7 +177,6 @@ namespace StarterAssets
             }
 
             _animationBlend = Mathf.Lerp(_animationBlend, targetSpeed, Time.deltaTime * SpeedChangeRate);
-
             if (_animationBlend < 0.01f) _animationBlend = 0f;
 
             Vector3 inputDirection = new Vector3(_input.move.x, 0.0f, _input.move.y).normalized;
@@ -198,7 +215,6 @@ namespace StarterAssets
                 if (_input.jump && _jumpTimeoutDelta <= 0.0f)
                 {
                     _verticalVelocity = Mathf.Sqrt(JumpHeight * -2f * Gravity);
-
                     _animator.SetBool(_animIDJump, true);
                 }
 
@@ -252,7 +268,6 @@ namespace StarterAssets
             return Mathf.Clamp(lfAngle, lfMin, lfMax);
         }
 
-        // 🔊 FUNCIONS AUDIO PER ANIMATION EVENTS
         private void OnFootstep(AnimationEvent animationEvent)
         {
             if (animationEvent.animatorClipInfo.weight > 0.5f)
@@ -260,10 +275,6 @@ namespace StarterAssets
                 if (audioSource != null && footstepSound != null)
                 {
                     audioSource.PlayOneShot(footstepSound);
-                }
-                else
-                {
-                    Debug.Log("🔊 Passos: Falta assignar AudioSource o FootstepSound!");
                 }
             }
         }
@@ -275,10 +286,6 @@ namespace StarterAssets
                 if (audioSource != null && landingSound != null)
                 {
                     audioSource.PlayOneShot(landingSound);
-                }
-                else
-                {
-                    Debug.Log("🔊 Aterratge: Falta assignar AudioSource o LandingSound!");
                 }
             }
         }

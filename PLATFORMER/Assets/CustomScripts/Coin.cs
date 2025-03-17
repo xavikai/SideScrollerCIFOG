@@ -1,45 +1,25 @@
-using UnityEngine;
+Ôªøusing UnityEngine;
 
-namespace StarterAssets
+public class Coin : MonoBehaviour
 {
-    public class Coin : MonoBehaviour
+    public int coinValue = 1;
+
+    private void OnTriggerEnter(Collider other)
     {
-        [Tooltip("Quantes monedes suma aquesta moneda?")]
-        public int coinValue = 1;
-
-        [Tooltip("Opcional: efecte de so quan es recull")]
-        public AudioClip pickupSound;
-
-        [Tooltip("Arrossega aquÌ el PlayerUIController (des de l'Inspector)")]
-        public PlayerUIController playerUIController;
-
-        private void OnTriggerEnter(Collider other)
+        if (other.CompareTag("Player"))
         {
-            // Comprovem si el collider que entra tÈ el tag "Player"
-            if (other.CompareTag("Player"))
+            if (PlayerStateManager.Instance != null)
             {
-                Debug.Log("Jugador ha entrat en el trigger de la moneda!");
+                PlayerStateManager.Instance.AddCoins(coinValue);
 
-                // Si hem assignat la referËncia del PlayerUIController
-                if (playerUIController != null)
-                {
-                    // Afegim les monedes al controlador
-                    playerUIController.AddCoins(coinValue);
-                    Debug.Log($"Afegint {coinValue} moneda/es. Total: {playerUIController.CurrentCoins}");
+                Debug.Log("Monedes totals: " + PlayerStateManager.Instance.currentCoins);
 
-                    // Reprodueix un so si hi ha ‡udio assignat
-                    if (pickupSound != null)
-                    {
-                        AudioSource.PlayClipAtPoint(pickupSound, transform.position);
-                    }
-
-                    // Destrueix l'objecte moneda desprÈs de recollir-la
-                    Destroy(gameObject);
-                }
-                else
-                {
-                    Debug.LogWarning("No s'ha assignat cap PlayerUIController a la moneda!");
-                }
+                // Destrueix la moneda despr√©s de recollir-la
+                Destroy(gameObject);
+            }
+            else
+            {
+                Debug.LogWarning("‚ö†Ô∏è PlayerStateManager.Instance √©s NULL! Assegura't que existeix a l'escena.");
             }
         }
     }
