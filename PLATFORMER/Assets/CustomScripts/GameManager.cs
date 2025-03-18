@@ -24,7 +24,6 @@ public class GameManager : MonoBehaviour
     public float initialStamina = 100f;
     public int initialCoins = 0;
 
-    // ⚠️ Nou ➜ Per recordar l'últim nivell jugat (no el MainMenu o GameOver)
     private string lastLevelSceneName;
 
     private void Awake()
@@ -56,11 +55,16 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log($"🌍 Escena carregada: {scene.name}");
 
-        // ➜ Guardem l'últim nivell jugat (evitant MainMenu i pantalles finals)
+        // Si no és menú ni finals, guarda l'últim nivell jugat
         if (scene.name != "MainMenu" && scene.name != "GameOver" && scene.name != "YouWin")
         {
             lastLevelSceneName = scene.name;
             Debug.Log($"✅ Guardat últim nivell jugat: {lastLevelSceneName}");
+
+            if (PlayerStateManager.Instance != null)
+            {
+                PlayerStateManager.Instance.SaveLevelStartState(); // Guarda l'estat del jugador al començament del nivell
+            }
         }
 
         if (scene.name == firstLevelSceneName)
@@ -107,7 +111,6 @@ public class GameManager : MonoBehaviour
         StartCoroutine(LoadSceneWithFade(currentScene));
     }
 
-    // ✅ Nou ➜ Reinicia l'últim nivell jugat (no el GameOver)
     public void RestartLastLevel()
     {
         if (!string.IsNullOrEmpty(lastLevelSceneName))
@@ -119,6 +122,19 @@ public class GameManager : MonoBehaviour
         {
             Debug.LogWarning("⚠️ No hi ha cap últim nivell guardat! Tornant al menú principal.");
             GoToMainMenu();
+        }
+    }
+
+    public void StartNextLevel(string nextSceneName)
+    {
+        if (!string.IsNullOrEmpty(nextSceneName))
+        {
+            Debug.Log($"🚀 Passant al següent nivell: {nextSceneName}");
+            StartCoroutine(LoadSceneWithFade(nextSceneName));
+        }
+        else
+        {
+            Debug.LogError("❌ No s'ha especificat el nom del següent nivell!");
         }
     }
 
@@ -177,6 +193,12 @@ public class GameManager : MonoBehaviour
         {
             Debug.Log("🎬 Iniciant FadeIn...");
             yield return StartCoroutine(FadeIn());
+        }
+
+        // ✅ Restaura l'estat inicial del nivell després de carregar-lo (excepte MainMenu)
+        if (sceneName != "MainMenu" && PlayerStateManager.Instance != null)
+        {
+            PlayerStateManager.Instance.RestoreLevelStartState();
         }
 
         isTransitioning = false;
