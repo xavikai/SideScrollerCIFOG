@@ -19,25 +19,26 @@ public class GameManager : MonoBehaviour
 
     private bool isTransitioning = false;
 
-    [Header("Valors inicials del jugador")]
+    // Variables de les dades inicials del jugador
     public float initialHealth = 100f;
     public float initialStamina = 100f;
     public int initialCoins = 0;
 
+    // ⚠️ Nou ➜ Per recordar l'últim nivell jugat (no el MainMenu o GameOver)
+    private string lastLevelSceneName;
+
     private void Awake()
     {
-        // Singleton pattern per assegurar un únic GameManager
-        if (Instance == null)
-        {
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-            Debug.Log("✅ GameManager creat i persistent.");
-        }
-        else
+        if (Instance != null && Instance != this)
         {
             Debug.LogWarning("❗ GameManager duplicat trobat i destruït.");
             Destroy(gameObject);
+            return;
         }
+
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
+        Debug.Log("✅ GameManager creat i persistent.");
     }
 
     private void Start()
@@ -49,15 +50,18 @@ public class GameManager : MonoBehaviour
             Debug.Log("🎬 Iniciant fade in...");
             StartCoroutine(FadeIn());
         }
-        else
-        {
-            Debug.LogWarning("⚠️ No s'ha assignat el fadeImage al GameManager!");
-        }
     }
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         Debug.Log($"🌍 Escena carregada: {scene.name}");
+
+        // ➜ Guardem l'últim nivell jugat (evitant MainMenu i pantalles finals)
+        if (scene.name != "MainMenu" && scene.name != "GameOver" && scene.name != "YouWin")
+        {
+            lastLevelSceneName = scene.name;
+            Debug.Log($"✅ Guardat últim nivell jugat: {lastLevelSceneName}");
+        }
 
         if (scene.name == firstLevelSceneName)
         {
@@ -67,17 +71,15 @@ public class GameManager : MonoBehaviour
                 Instantiate(playerStateManagerPrefab);
             }
 
-            ResetPlayerStats(); // Reinicia les dades del jugador cada cop que tornem al primer nivell
+            ResetPlayerStats();
             FindFadeImage();
         }
         else if (scene.name == "MainMenu")
         {
-            Debug.Log("🏠 Tornant al MainMenu.");
-
             if (PlayerStateManager.Instance != null)
             {
-                Debug.Log("🗑️ Destruint PlayerStateManager existent.");
                 Destroy(PlayerStateManager.Instance.gameObject);
+                Debug.Log("🗑️ PlayerStateManager destruït");
             }
 
             FindFadeImage();
@@ -88,20 +90,13 @@ public class GameManager : MonoBehaviour
 
     public void StartNewGame()
     {
-        Debug.Log("▶️ Nova partida: StartNewGame() cridat.");
-
-        if (string.IsNullOrEmpty(firstLevelSceneName))
-        {
-            Debug.LogError("❌ No s'ha assignat el nom de la primera escena!");
-            return;
-        }
-
+        Debug.Log("▶️ Nova partida: StartNewGame()");
         StartCoroutine(LoadSceneWithFade(firstLevelSceneName));
     }
 
     public void GoToMainMenu()
     {
-        Debug.Log("🏠 Tornant al menú principal: GoToMainMenu() cridat.");
+        Debug.Log("🏠 Tornant al menú principal");
         StartCoroutine(LoadSceneWithFade("MainMenu"));
     }
 
@@ -109,8 +104,28 @@ public class GameManager : MonoBehaviour
     {
         string currentScene = SceneManager.GetActiveScene().name;
         Debug.Log($"🔄 Reiniciant nivell actual: {currentScene}");
-
         StartCoroutine(LoadSceneWithFade(currentScene));
+    }
+
+    // ✅ Nou ➜ Reinicia l'últim nivell jugat (no el GameOver)
+    public void RestartLastLevel()
+    {
+        if (!string.IsNullOrEmpty(lastLevelSceneName))
+        {
+            Debug.Log($"🔄 Reiniciant últim nivell jugat: {lastLevelSceneName}");
+            StartCoroutine(LoadSceneWithFade(lastLevelSceneName));
+        }
+        else
+        {
+            Debug.LogWarning("⚠️ No hi ha cap últim nivell guardat! Tornant al menú principal.");
+            GoToMainMenu();
+        }
+    }
+
+    public void GoToGameOver()
+    {
+        Debug.Log("💀 Anant a l'escena GameOver");
+        StartCoroutine(LoadSceneWithFade("GameOver"));
     }
 
     public void QuitGame()
@@ -169,11 +184,7 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator FadeIn()
     {
-        if (fadeImage == null)
-        {
-            Debug.LogWarning("⚠️ FadeIn cancel·lat. fadeImage no assignat.");
-            yield break;
-        }
+        if (fadeImage == null) yield break;
 
         float elapsedTime = 0f;
         Color c = fadeImage.color;
@@ -196,11 +207,7 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator FadeOut()
     {
-        if (fadeImage == null)
-        {
-            Debug.LogWarning("⚠️ FadeOut cancel·lat. fadeImage no assignat.");
-            yield break;
-        }
+        if (fadeImage == null) yield break;
 
         float elapsedTime = 0f;
         Color c = fadeImage.color;

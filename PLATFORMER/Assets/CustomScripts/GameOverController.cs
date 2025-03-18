@@ -1,24 +1,32 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 public class GameOverController : MonoBehaviour
 {
-    public Button restartLevelButton;
+    [Header("Botons GameOver")]
+    public Button restartButton;
     public Button mainMenuButton;
 
     private void Start()
     {
-        restartLevelButton.onClick.AddListener(RestartLevel);
-        mainMenuButton.onClick.AddListener(GoToMainMenu);
+        // Assegura que els botons estan assignats
+        if (restartButton != null)
+            restartButton.onClick.AddListener(RestartLevel);
+
+        if (mainMenuButton != null)
+            mainMenuButton.onClick.AddListener(GoToMainMenu);
     }
 
-    private void RestartLevel()
+    public void RestartLevel()
     {
-        GameManager.Instance.RestartLevel();
+        Debug.Log("🔄 Restart Level des de GameOver");
+        GameManager.Instance.RestartLastLevel();
     }
 
-    private void GoToMainMenu()
+
+    public void GoToMainMenu()
     {
+        Debug.Log("🏠 Tornant al Main Menu des de GameOver");
         GameManager.Instance.GoToMainMenu();
     }
 }
