@@ -3633,6 +3633,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3610375036720813954, guid: 77bde72c77d3e724ba70a415544fdf70, type: 3}
+      propertyPath: usePhysics
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3610375036720813954, guid: 77bde72c77d3e724ba70a415544fdf70, type: 3}
       propertyPath: isProjectile
       value: 1
       objectReference: {fileID: 0}

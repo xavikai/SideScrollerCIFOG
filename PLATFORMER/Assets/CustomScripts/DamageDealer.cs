@@ -31,11 +31,11 @@ public class DamageDealer : MonoBehaviour
     private int currentShots = 0;
     private Vector3 startPosition;
     private Quaternion startRotation;
-    private bool goingToTarget = true;
-    private bool isWaiting = false;
     private float lifeTimer;
-
     private Rigidbody rb;
+
+    private Vector3 pointB => targetPosition;
+    private bool movingToPointB = true;
 
     private void Start()
     {
@@ -45,7 +45,8 @@ public class DamageDealer : MonoBehaviour
 
         if (moveBetweenPoints)
         {
-            StartCoroutine(MovingRoutine());
+            // Inicialitza el punt B
+            movingToPointB = true;
         }
 
         if (isProjectile)
@@ -60,27 +61,58 @@ public class DamageDealer : MonoBehaviour
 
     private void Update()
     {
+        if (moveBetweenPoints)
+        {
+            MoveBetweenPointsLogic();
+        }
+
         if (isProjectile && !usePhysics)
         {
             MoveAsProjectile();
         }
 
-        // Controla el temps de vida, tant si fa servir física com no
-        lifeTimer -= Time.deltaTime;
-
-        if (isProjectile && lifeTimer <= 0f)
+        // Controla el temps de vida (projectils)
+        if (isProjectile)
         {
-            currentShots++;
+            lifeTimer -= Time.deltaTime;
 
-            if (repeatProjectile && (maxShots == 0 || currentShots < maxShots))
+            if (lifeTimer <= 0f)
             {
-                ResetProjectile();
-            }
-            else
-            {
-                Destroy(gameObject);
+                currentShots++;
+
+                if (repeatProjectile && (maxShots == 0 || currentShots < maxShots))
+                {
+                    ResetProjectile();
+                }
+                else
+                {
+                    Destroy(gameObject);
+                }
             }
         }
+    }
+
+    private void MoveBetweenPointsLogic()
+    {
+        Vector3 destination = movingToPointB ? pointB : startPosition;
+
+        transform.position = Vector3.MoveTowards(transform.position, destination, moveSpeed * Time.deltaTime);
+
+        if (Vector3.Distance(transform.position, destination) < 0.01f)
+        {
+            StartCoroutine(WaitBeforeSwitching());
+        }
+    }
+
+    private IEnumerator WaitBeforeSwitching()
+    {
+        float timer = waitTime;
+        moveBetweenPoints = false; // Pausa moviment durant l'espera
+
+        yield return new WaitForSeconds(timer);
+
+        movingToPointB = !movingToPointB;
+        moveBetweenPoints = true; // Reprèn el moviment
     }
 
     private void SetupRigidbody()
@@ -98,10 +130,9 @@ public class DamageDealer : MonoBehaviour
 
     private void LaunchWithPhysics()
     {
-        rb.velocity = Vector3.zero;
+        rb.linearVelocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
 
-        // Aplica una força impulsiva en la direcció especificada
         rb.AddForce(projectileDirection.normalized * impulseForce, ForceMode.Impulse);
     }
 
@@ -113,7 +144,7 @@ public class DamageDealer : MonoBehaviour
 
         if (usePhysics)
         {
-            rb.velocity = Vector3.zero;
+            rb.linearVelocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
             LaunchWithPhysics();
         }
