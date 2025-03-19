@@ -48,8 +48,7 @@ MonoBehaviour:
   floatSpeed: 1
   fadeDuration: 3
   floatDirection: {x: 0, y: 1, z: 0}
-  displayText: +50
-  textColor: {r: 1, g: 1, b: 1, a: 1}
+  textFeedback: {fileID: 8890629808849689706}
 --- !u!1 &3502736763958819303
 GameObject:
   m_ObjectHideFlags: 0
@@ -304,5 +303,4 @@ MonoBehaviour:
   floatSpeed: 0.1
   fadeDuration: 10
   floatDirection: {x: 0, y: 1, z: 0}
-  displayText: +50
-  textColor: {r: 1, g: 1, b: 1, a: 1}
+  textFeedback: {fileID: 0}

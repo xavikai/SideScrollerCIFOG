@@ -186,7 +186,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   regeneratesHealth: 1
-  regeneratesStamina: 1
+  regeneratesStamina: 0
   healthAmount: 30
   staminaAmount: 20
   canRespawn: 1
@@ -196,3 +196,4 @@ MonoBehaviour:
   soundVolume: 1
   floatingTextPrefab: {fileID: 3165241257388963001, guid: 3f1e6d7c67158a346aabbe9ea8127ed6, type: 3}
   floatingTextSpawnPoint: {fileID: 6022880265221785079}
+  floatingTextColor: {r: 0, g: 1, b: 0, a: 1}

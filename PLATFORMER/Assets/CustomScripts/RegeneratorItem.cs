@@ -7,24 +7,22 @@ public class RegeneratorItem : MonoBehaviour
     public bool regeneratesStamina = false;
 
     [Header("Quantitat a regenerar")]
-    [Tooltip("Quantitat de vida que es regenera")]
     public float healthAmount = 20f;
-
-    [Tooltip("Quantitat d'estamina que es regenera")]
     public float staminaAmount = 20f;
 
     [Header("Regeneració després de recollir")]
-    public bool canRespawn = false;        // El Game Designer decideix si reapareix o es destrueix
-    public float respawnDelay = 5f;        // Temps abans de reapareixer si es pot regenerar
+    public bool canRespawn = false;
+    public float respawnDelay = 5f;
 
     [Header("Efectes visuals i sons")]
-    public ParticleSystem pickupEffect;    // Partícules al recollir
-    public AudioClip pickupSound;          // So al recollir
+    public ParticleSystem pickupEffect;
+    public AudioClip pickupSound;
     public float soundVolume = 1.0f;
 
-    [Header("Floating Text")]
-    public GameObject floatingTextPrefab;          // Prefab del text flotant
-    public Transform floatingTextSpawnPoint;       // On apareixerà el text (opcional)
+    [Header("Floating Text Configuració")]
+    public GameObject floatingTextPrefab;
+    public Transform floatingTextSpawnPoint;
+    public Color floatingTextColor = Color.green;
 
     private Renderer[] renderers;
     private Collider[] colliders;
@@ -47,10 +45,8 @@ public class RegeneratorItem : MonoBehaviour
         if (!other.CompareTag("Player")) return;
 
         PlayerStateManager player = PlayerStateManager.Instance;
-
         bool didSomething = false;
 
-        // ➜ Regeneració de Vida
         if (regeneratesHealth && player.currentHealth < player.maxHealth)
         {
             float prevHealth = player.currentHealth;
@@ -60,12 +56,11 @@ public class RegeneratorItem : MonoBehaviour
             if (gained > 0)
             {
                 Debug.Log($"❤️ Vida regenerada: {player.currentHealth} / {player.maxHealth} (+{gained})");
-                ShowFloatingText($"+{gained} HP", Color.green);
+                ShowFloatingText($"+{gained} HP");
                 didSomething = true;
             }
         }
 
-        // ➜ Regeneració d'Estamina
         if (regeneratesStamina && player.currentStamina < player.maxStamina)
         {
             float prevStamina = player.currentStamina;
@@ -75,12 +70,11 @@ public class RegeneratorItem : MonoBehaviour
             if (gained > 0)
             {
                 Debug.Log($"⚡ Estamina regenerada: {player.currentStamina} / {player.maxStamina} (+{gained})");
-                ShowFloatingText($"+{gained} STA", Color.cyan);
+                ShowFloatingText($"+{gained} STA");
                 didSomething = true;
             }
         }
 
-        // Si ha regenerat alguna cosa, executa accions
         if (didSomething)
         {
             PlayPickupEffect();
@@ -113,7 +107,7 @@ public class RegeneratorItem : MonoBehaviour
         }
     }
 
-    private void ShowFloatingText(string text, Color color)
+    private void ShowFloatingText(string text)
     {
         if (floatingTextPrefab == null)
         {
@@ -121,13 +115,8 @@ public class RegeneratorItem : MonoBehaviour
             return;
         }
 
-        // Agafem el punt on apareixerà el text (si no hi ha spawn point, usa el mateix objecte)
         Transform spawnPoint = floatingTextSpawnPoint != null ? floatingTextSpawnPoint : transform;
 
-        // AFEGIM EL DEBUG AQUÍ! 👇
-        Debug.Log($"🟢 Text spawn point: {spawnPoint.name} ➜ {spawnPoint.position}");
-
-        // Instancia el prefab del text a la posició del punt d'spawn
         GameObject textObj = Instantiate(floatingTextPrefab, spawnPoint.position, Quaternion.identity);
 
         if (textObj == null)
@@ -144,18 +133,15 @@ public class RegeneratorItem : MonoBehaviour
             return;
         }
 
-        floatingTextScript.SetupText(text, color);
+        floatingTextScript.SetupText(text, floatingTextColor);
 
-        Debug.Log($"✅ FloatingText creat ➜ Text: {text} | Color: {color}");
+        Debug.Log($"✅ FloatingText creat ➜ Text: {text} | Vertex Color: {floatingTextColor}");
     }
-
 
     private System.Collections.IEnumerator RespawnRoutine()
     {
         HideObject();
-
         yield return new WaitForSeconds(respawnDelay);
-
         ShowObject();
     }
 

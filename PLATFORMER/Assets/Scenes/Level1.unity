@@ -5047,6 +5047,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8084141057591561526, guid: b782ff16dcf05a34e8a9f4b1df400f2a, type: 3}
+      propertyPath: floatingTextColor.b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8084141057591561526, guid: b782ff16dcf05a34e8a9f4b1df400f2a, type: 3}
+      propertyPath: floatingTextColor.g
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8408483435554554965, guid: b782ff16dcf05a34e8a9f4b1df400f2a, type: 3}
       propertyPath: m_Name
       value: Regenerator
