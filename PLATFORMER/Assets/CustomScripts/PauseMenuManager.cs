@@ -64,7 +64,8 @@ public class PauseMenuManager : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
-        GameManager.Instance.RestartLevel();
+        // 👉 Reinicia el nivell des de zero, com si fos una partida nova
+        GameManager.Instance.RestartLevelFromScratch();
     }
 
     private void GoToMainMenu()

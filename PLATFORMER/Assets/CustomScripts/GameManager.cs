@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
-using UnityEngine.SceneManagement;
-using UnityEngine.UI;
-using System.Collections;
+using UnityEngine.SceneManagement;   // Per controlar escenes
+using UnityEngine.UI;                // Per accedir a UI Image
+using System.Collections;            // Per IEnumerator
 
 public class GameManager : MonoBehaviour
 {
@@ -111,6 +111,17 @@ public class GameManager : MonoBehaviour
         StartCoroutine(LoadSceneWithFade(currentScene));
     }
 
+    // 👉 NOU MÈTODE que reinicia el nivell des de zero
+    public void RestartLevelFromScratch()
+    {
+        string currentScene = SceneManager.GetActiveScene().name;
+        Debug.Log($"🔄 Reiniciant nivell des de zero: {currentScene}");
+
+        ResetPlayerStats();
+
+        StartCoroutine(LoadSceneWithFade(currentScene));
+    }
+
     public void RestartLastLevel()
     {
         if (!string.IsNullOrEmpty(lastLevelSceneName))
@@ -195,7 +206,7 @@ public class GameManager : MonoBehaviour
             yield return StartCoroutine(FadeIn());
         }
 
-        // ✅ Restaura l'estat inicial del nivell després de carregar-lo (excepte MainMenu)
+        // Restaura estat del jugador després de carregar escena (no MainMenu)
         if (sceneName != "MainMenu" && PlayerStateManager.Instance != null)
         {
             PlayerStateManager.Instance.RestoreLevelStartState();
