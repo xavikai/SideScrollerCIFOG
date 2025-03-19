@@ -155,3 +155,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   nextLevelScene: {fileID: 102900000, guid: b6ba4f1a0b5447c43859fa5b454b3cd9, type: 3}
   nextLevelSceneName: Level2
+  requiresCoins: 0
+  requiredCoins: 10

@@ -16,32 +16,48 @@ public class NextLevelTrigger : MonoBehaviour
     [HideInInspector]
     public string nextLevelSceneName;
 
+    [Header("Requisits per passar de nivell")]
+    public bool requiresCoins = false;   // El game designer decideix si són necessàries monedes
+    public int requiredCoins = 10;       // Monedes mínimes per passar de nivell si s'activa requiresCoins
+
     private void OnValidate()
     {
 #if UNITY_EDITOR
-        // Aquesta funció s'executa quan canvies un valor a l'Inspector
         if (nextLevelScene != null)
         {
             nextLevelSceneName = nextLevelScene.name;
-            EditorUtility.SetDirty(this); // Marca el component com a modificat per guardar el valor
+            EditorUtility.SetDirty(this);
         }
 #endif
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player"))
-        {
-            Debug.Log($"➡️ Jugador ha entrat al trigger del següent nivell: {nextLevelSceneName}");
+        if (!other.CompareTag("Player")) return;
 
-            if (!string.IsNullOrEmpty(nextLevelSceneName))
+        Debug.Log($"➡️ Jugador ha entrat al trigger del següent nivell: {nextLevelSceneName}");
+
+        // Si es necessita un nombre de monedes determinat
+        if (requiresCoins)
+        {
+            int playerCoins = PlayerStateManager.Instance.currentCoins;
+
+            if (playerCoins < requiredCoins)
             {
-                GameManager.Instance.StartNextLevel(nextLevelSceneName);
+                Debug.LogWarning($"🚫 No tens prou monedes per passar de nivell! Tens {playerCoins} / {requiredCoins}");
+                return; // Bloqueja el canvi de nivell
             }
-            else
-            {
-                Debug.LogError("❌ No s'ha definit el nom de la següent escena!");
-            }
+
+            Debug.Log($"✅ Tens prou monedes ➜ {playerCoins} / {requiredCoins}. Passant al següent nivell...");
+        }
+
+        if (!string.IsNullOrEmpty(nextLevelSceneName))
+        {
+            GameManager.Instance.StartNextLevel(nextLevelSceneName);
+        }
+        else
+        {
+            Debug.LogError("❌ No s'ha definit el nom de la següent escena!");
         }
     }
 }
