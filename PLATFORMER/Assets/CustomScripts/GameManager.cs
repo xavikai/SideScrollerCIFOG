@@ -1,21 +1,21 @@
 ﻿using UnityEngine;
-using UnityEngine.SceneManagement;   // Per controlar escenes
-using UnityEngine.UI;                // Per accedir a UI Image
-using System.Collections;            // Per IEnumerator
+using UnityEngine.SceneManagement;
+using System.Collections;
 
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance;
-
-    [Header("FADE")]
-    public Image fadeImage;
-    public float fadeDuration = 1f;
 
     [Header("Player Manager Prefab")]
     public GameObject playerStateManagerPrefab;
 
     [Header("Primera Escena del Joc")]
     public string firstLevelSceneName = "Level1";
+
+#if UNITY_EDITOR
+    [Header("DEBUG MODE (Editor Only)")]
+    public bool enableEditorBootstrap = true;
+#endif
 
     private bool isTransitioning = false;
 
@@ -38,24 +38,33 @@ public class GameManager : MonoBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject);
         Debug.Log("✅ GameManager creat i persistent.");
+
+#if UNITY_EDITOR
+        if (enableEditorBootstrap)
+        {
+            DebugEditorSetup();
+        }
+#endif
     }
 
     private void Start()
     {
         SceneManager.sceneLoaded += OnSceneLoaded;
 
-        if (fadeImage != null)
+        // Opcionalment pots iniciar un fade in automàtic
+        if (FadeManager.Instance != null)
         {
-            Debug.Log("🎬 Iniciant fade in...");
-            StartCoroutine(FadeIn());
+            FadeManager.Instance.FadeIn(1f);
         }
+
+        EnsurePlayerStateManagerExists();
     }
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         Debug.Log($"🌍 Escena carregada: {scene.name}");
 
-        // Si no és menú ni finals, guarda l'últim nivell jugat
+        // Guarda l'últim nivell jugat (no MainMenu/GameOver/YouWin)
         if (scene.name != "MainMenu" && scene.name != "GameOver" && scene.name != "YouWin")
         {
             lastLevelSceneName = scene.name;
@@ -63,7 +72,7 @@ public class GameManager : MonoBehaviour
 
             if (PlayerStateManager.Instance != null)
             {
-                PlayerStateManager.Instance.SaveLevelStartState(); // Guarda l'estat del jugador al començament del nivell
+                PlayerStateManager.Instance.SaveLevelStartState();
             }
         }
 
@@ -76,7 +85,6 @@ public class GameManager : MonoBehaviour
             }
 
             ResetPlayerStats();
-            FindFadeImage();
         }
         else if (scene.name == "MainMenu")
         {
@@ -85,8 +93,35 @@ public class GameManager : MonoBehaviour
                 Destroy(PlayerStateManager.Instance.gameObject);
                 Debug.Log("🗑️ PlayerStateManager destruït");
             }
+        }
+    }
 
-            FindFadeImage();
+#if UNITY_EDITOR
+    private void DebugEditorSetup()
+    {
+        var sceneName = SceneManager.GetActiveScene().name;
+
+        if (sceneName != "MainMenu")
+        {
+            if (PlayerStateManager.Instance == null)
+            {
+                Debug.Log("🧪 Editor Bootstrap ➜ Instanciant PlayerStateManager manualment...");
+                Instantiate(playerStateManagerPrefab);
+            }
+
+            ResetPlayerStats();
+        }
+    }
+#endif
+
+    private void EnsurePlayerStateManagerExists()
+    {
+        if (PlayerStateManager.Instance == null)
+        {
+            Debug.Log("🧱 Instanciant PlayerStateManager des de EnsurePlayerStateManagerExists...");
+            Instantiate(playerStateManagerPrefab);
+
+            ResetPlayerStats();
         }
     }
 
@@ -111,14 +146,12 @@ public class GameManager : MonoBehaviour
         StartCoroutine(LoadSceneWithFade(currentScene));
     }
 
-    // 👉 NOU MÈTODE que reinicia el nivell des de zero
     public void RestartLevelFromScratch()
     {
         string currentScene = SceneManager.GetActiveScene().name;
         Debug.Log($"🔄 Reiniciant nivell des de zero: {currentScene}");
 
         ResetPlayerStats();
-
         StartCoroutine(LoadSceneWithFade(currentScene));
     }
 
@@ -176,7 +209,7 @@ public class GameManager : MonoBehaviour
 
     #endregion
 
-    #region FADE METHODS
+    #region FADE HANDLING WITH FADEMANAGER
 
     private IEnumerator LoadSceneWithFade(string sceneName)
     {
@@ -188,99 +221,23 @@ public class GameManager : MonoBehaviour
 
         isTransitioning = true;
 
-        if (fadeImage != null)
+        if (FadeManager.Instance != null)
         {
-            Debug.Log("🎬 Iniciant FadeOut...");
-            yield return StartCoroutine(FadeOut());
+            FadeManager.Instance.FadeOut(1f);
+            yield return new WaitForSeconds(1f); // Match fadeOut duration
         }
 
         Debug.Log($"🌐 Carregant nova escena: {sceneName}");
         SceneManager.LoadScene(sceneName);
         yield return null;
 
-        FindFadeImage();
-
-        if (fadeImage != null)
+        if (FadeManager.Instance != null)
         {
-            Debug.Log("🎬 Iniciant FadeIn...");
-            yield return StartCoroutine(FadeIn());
-        }
-
-        // Restaura estat del jugador després de carregar escena (no MainMenu)
-        if (sceneName != "MainMenu" && PlayerStateManager.Instance != null)
-        {
-            PlayerStateManager.Instance.RestoreLevelStartState();
+            FadeManager.Instance.FadeIn(1f);
+            yield return new WaitForSeconds(1f); // Match fadeIn duration
         }
 
         isTransitioning = false;
-    }
-
-    private IEnumerator FadeIn()
-    {
-        if (fadeImage == null) yield break;
-
-        float elapsedTime = 0f;
-        Color c = fadeImage.color;
-        c.a = 1f;
-        fadeImage.color = c;
-
-        while (elapsedTime < fadeDuration)
-        {
-            elapsedTime += Time.deltaTime;
-            c.a = 1f - Mathf.Clamp01(elapsedTime / fadeDuration);
-            fadeImage.color = c;
-            yield return null;
-        }
-
-        c.a = 0f;
-        fadeImage.color = c;
-
-        Debug.Log("✅ FadeIn complet.");
-    }
-
-    private IEnumerator FadeOut()
-    {
-        if (fadeImage == null) yield break;
-
-        float elapsedTime = 0f;
-        Color c = fadeImage.color;
-        c.a = 0f;
-        fadeImage.color = c;
-
-        while (elapsedTime < fadeDuration)
-        {
-            elapsedTime += Time.deltaTime;
-            c.a = Mathf.Clamp01(elapsedTime / fadeDuration);
-            fadeImage.color = c;
-            yield return null;
-        }
-
-        c.a = 1f;
-        fadeImage.color = c;
-
-        Debug.Log("✅ FadeOut complet.");
-    }
-
-    private void FindFadeImage()
-    {
-        if (fadeImage == null)
-        {
-            GameObject fadeObj = GameObject.Find("FadeImage");
-
-            if (fadeObj != null)
-            {
-                fadeImage = fadeObj.GetComponent<Image>();
-                Debug.Log("🔎 FadeImage trobat i assignat.");
-            }
-            else
-            {
-                Debug.LogWarning("⚠️ FadeImage no trobat a la nova escena.");
-            }
-        }
-        else
-        {
-            Debug.Log("ℹ️ fadeImage ja està assignat.");
-        }
     }
 
     #endregion
