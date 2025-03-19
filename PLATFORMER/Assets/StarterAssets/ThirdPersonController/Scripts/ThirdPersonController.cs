@@ -41,6 +41,10 @@ namespace StarterAssets
         public AudioClip LandingAudioClip;
         [Range(0, 1f)] public float FootstepAudioVolume = 0.5f;
 
+        [Header("Fall Damage Settings")]
+        public float fatalFallSpeed = 20f;               // Velocitat de caiguda mortal
+        public LayerMask safeLandingLayers;              // Capa per superfícies segures (com matalassos)
+
         private AudioSource _audioSource;
 
         private float _cinemachineTargetYaw;
@@ -152,16 +156,25 @@ namespace StarterAssets
 
             Grounded = Physics.CheckSphere(spherePosition, GroundedRadius, GroundLayers, QueryTriggerInteraction.Ignore);
 
-            // Detecció d'impacte fort en aterrar
             if (!wasGrounded && Grounded)
             {
                 float fallSpeed = Mathf.Abs(_verticalVelocity);
                 Debug.Log($"📉 Velocitat de caiguda al tocar terra: {fallSpeed}");
 
-                if (fallSpeed > 20f)
+                // Comprova si ha aterrat en una superfície segura
+                bool landedOnSafeSurface = Physics.CheckSphere(spherePosition, GroundedRadius, safeLandingLayers);
+
+                if (fallSpeed > fatalFallSpeed)
                 {
-                    Debug.Log("💥 Caiguda massa forta! El jugador mor!");
-                    playerState.TakeDamage(playerState.currentHealth);
+                    if (landedOnSafeSurface)
+                    {
+                        Debug.Log("🛏️ Aterrissat en superfície segura. Cap dany rebut.");
+                    }
+                    else
+                    {
+                        Debug.Log("💥 Caiguda fatal! El jugador mor!");
+                        playerState.TakeDamage(playerState.currentHealth);
+                    }
                 }
             }
 
@@ -305,7 +318,6 @@ namespace StarterAssets
             Gizmos.DrawSphere(new Vector3(transform.position.x, transform.position.y - GroundedOffset, transform.position.z), GroundedRadius);
         }
 
-        // ✅ EVENT PER ALS PASOS
         private void OnFootstep(AnimationEvent animationEvent)
         {
             if (animationEvent.animatorClipInfo.weight > 0.5f)
@@ -318,7 +330,6 @@ namespace StarterAssets
             }
         }
 
-        // ✅ EVENT PER ATERRAR (OPCIONAL)
         private void OnLand(AnimationEvent animationEvent)
         {
             if (animationEvent.animatorClipInfo.weight > 0.5f && LandingAudioClip != null)
