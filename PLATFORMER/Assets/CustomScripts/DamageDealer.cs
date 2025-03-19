@@ -23,12 +23,19 @@ public class DamageDealer : MonoBehaviour
     [Tooltip("0 ➜ dispararà infinitament")]
     public int maxShots = 0;
 
+    [Header("Física (Opcional)")]
+    public bool usePhysics = false;
+    public float impulseForce = 10f;
+    public float projectileMass = 1f;
+
     private int currentShots = 0;
     private Vector3 startPosition;
     private Quaternion startRotation;
     private bool goingToTarget = true;
     private bool isWaiting = false;
     private float lifeTimer;
+
+    private Rigidbody rb;
 
     private void Start()
     {
@@ -40,47 +47,28 @@ public class DamageDealer : MonoBehaviour
         {
             StartCoroutine(MovingRoutine());
         }
+
+        if (isProjectile)
+        {
+            if (usePhysics)
+            {
+                SetupRigidbody();
+                LaunchWithPhysics();
+            }
+        }
     }
 
     private void Update()
     {
-        if (isProjectile)
+        if (isProjectile && !usePhysics)
         {
             MoveAsProjectile();
         }
-    }
 
-    private IEnumerator MovingRoutine()
-    {
-        Vector3 endPosition = targetPosition;
-
-        while (true)
-        {
-            if (!isWaiting)
-            {
-                Vector3 destination = goingToTarget ? endPosition : startPosition;
-                transform.position = Vector3.MoveTowards(transform.position, destination, moveSpeed * Time.deltaTime);
-
-                if (Vector3.Distance(transform.position, destination) < 0.01f)
-                {
-                    isWaiting = true;
-                    yield return new WaitForSeconds(waitTime);
-                    goingToTarget = !goingToTarget;
-                    isWaiting = false;
-                }
-            }
-
-            yield return null;
-        }
-    }
-
-    private void MoveAsProjectile()
-    {
-        transform.Translate(projectileDirection.normalized * projectileSpeed * Time.deltaTime, Space.World);
-
+        // Controla el temps de vida, tant si fa servir física com no
         lifeTimer -= Time.deltaTime;
 
-        if (lifeTimer <= 0f)
+        if (isProjectile && lifeTimer <= 0f)
         {
             currentShots++;
 
@@ -90,10 +78,31 @@ public class DamageDealer : MonoBehaviour
             }
             else
             {
-                Debug.Log($"💥 Final de projectils ➜ {currentShots} dispar(s)");
                 Destroy(gameObject);
             }
         }
+    }
+
+    private void SetupRigidbody()
+    {
+        rb = GetComponent<Rigidbody>();
+        if (rb == null)
+        {
+            rb = gameObject.AddComponent<Rigidbody>();
+        }
+
+        rb.mass = projectileMass;
+        rb.useGravity = true;
+        rb.isKinematic = false;
+    }
+
+    private void LaunchWithPhysics()
+    {
+        rb.velocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+
+        // Aplica una força impulsiva en la direcció especificada
+        rb.AddForce(projectileDirection.normalized * impulseForce, ForceMode.Impulse);
     }
 
     private void ResetProjectile()
@@ -101,7 +110,20 @@ public class DamageDealer : MonoBehaviour
         transform.position = startPosition;
         transform.rotation = startRotation;
         lifeTimer = lifetime;
+
+        if (usePhysics)
+        {
+            rb.velocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+            LaunchWithPhysics();
+        }
+
         Debug.Log($"🔄 Projectil reiniciat ➜ Tir número {currentShots}" + (maxShots > 0 ? $" / {maxShots}" : " (infinit)"));
+    }
+
+    private void MoveAsProjectile()
+    {
+        transform.Translate(projectileDirection.normalized * projectileSpeed * Time.deltaTime, Space.World);
     }
 
     private void OnTriggerEnter(Collider other)
@@ -121,7 +143,6 @@ public class DamageDealer : MonoBehaviour
             }
             else
             {
-                Debug.Log($"💥 Final de projectils ➜ {currentShots} dispar(s)");
                 Destroy(gameObject);
             }
         }
@@ -134,6 +155,12 @@ public class DamageDealer : MonoBehaviour
             Gizmos.color = Color.red;
             Gizmos.DrawLine(transform.position, targetPosition);
             Gizmos.DrawSphere(targetPosition, 0.2f);
+        }
+
+        if (isProjectile)
+        {
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawRay(transform.position, projectileDirection.normalized * 2f);
         }
     }
 }
