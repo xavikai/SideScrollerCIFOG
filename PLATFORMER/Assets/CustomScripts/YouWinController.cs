@@ -3,33 +3,50 @@ using UnityEngine.UI;
 
 public class YouWinController : MonoBehaviour
 {
-    [Header("Botons")]
-    public Button restartLevelButton;
     public Button mainMenuButton;
+    public Button exitGameButton;
 
     private void Start()
     {
-        // Mostrar el cursor per assegurar que es pot interactuar
-        Cursor.visible = true;
+        // Mostrem el cursor per interactuar amb la UI
         Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
 
-        // Afegir listeners als botons
-        restartLevelButton.onClick.AddListener(RestartLevel);
-        mainMenuButton.onClick.AddListener(GoToMainMenu);
+        if (mainMenuButton != null)
+        {
+            mainMenuButton.onClick.AddListener(GoToMainMenu);
+        }
+        else
+        {
+            Debug.LogWarning("❗ mainMenuButton no assignat en YouWinController!");
+        }
+
+        if (exitGameButton != null)
+        {
+            exitGameButton.onClick.AddListener(ExitGame);
+        }
+        else
+        {
+            Debug.LogWarning("❗ exitGameButton no assignat en YouWinController!");
+        }
     }
 
-    public void RestartLevel()
+    private void GoToMainMenu()
     {
-        Debug.Log("🔄 Reiniciant el nivell!");
-        GameManager.Instance.RestartLevel();
+        Debug.Log("🏠 Tornant al Main Menu des de YouWin");
+        GameManager.Instance.GoToMainMenu();
     }
 
-    public void GoToMainMenu()
+    private void ExitGame()
     {
-        Debug.Log("🏠 Tornant al menú principal!");
-        GameManager.Instance.LoadScene("MainMenu");
+        Debug.Log("🚪 Sortint del joc des de YouWin");
 
-        // Reiniciem stats si tornem al menú principal
-        GameManager.Instance.ResetPlayerStats();
+#if UNITY_EDITOR
+        // Això funciona dins l'Editor per simular la sortida
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        // Això funciona en una build real
+        Application.Quit();
+#endif
     }
 }

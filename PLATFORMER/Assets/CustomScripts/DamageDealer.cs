@@ -1,64 +1,197 @@
 ﻿using UnityEngine;
+using System.Collections;
 
 public class DamageDealer : MonoBehaviour
 {
-    [Header("Configuració del Dany")]
+    [Header("Dany")]
     public float damageAmount = 10f;
-    public bool damageOverTime = false;
-    public float damageRate = 1f; // cada quant temps fa dany si es damageOverTime
-    private float nextDamageTime = 0f;
+
+    [Header("Tipus de moviment")]
+    public bool moveBetweenPoints = false;
+    public Vector3 targetPosition;
+    public float moveSpeed = 2f;
+    public float waitTime = 1f;
+
+    [Header("Projectil")]
+    public bool isProjectile = false;
+    public Vector3 projectileDirection = Vector3.forward;
+    public float projectileSpeed = 10f;
+    public float lifetime = 5f;
+
+    [Header("Repetició Projectil")]
+    public bool repeatProjectile = false;
+    [Tooltip("0 ➜ dispararà infinitament")]
+    public int maxShots = 0;
+
+    [Header("Física (Opcional)")]
+    public bool usePhysics = false;
+    public float impulseForce = 10f;
+    public float projectileMass = 1f;
+
+    private int currentShots = 0;
+    private Vector3 startPosition;
+    private Quaternion startRotation;
+    private float lifeTimer;
+    private Rigidbody rb;
+
+    private Vector3 pointB => targetPosition;
+    private bool movingToPointB = true;
+
+    private void Start()
+    {
+        startPosition = transform.position;
+        startRotation = transform.rotation;
+        lifeTimer = lifetime;
+
+        if (moveBetweenPoints)
+        {
+            // Inicialitza el punt B
+            movingToPointB = true;
+        }
+
+        if (isProjectile)
+        {
+            if (usePhysics)
+            {
+                SetupRigidbody();
+                LaunchWithPhysics();
+            }
+        }
+    }
+
+    private void Update()
+    {
+        if (moveBetweenPoints)
+        {
+            MoveBetweenPointsLogic();
+        }
+
+        if (isProjectile && !usePhysics)
+        {
+            MoveAsProjectile();
+        }
+
+        // Controla el temps de vida (projectils)
+        if (isProjectile)
+        {
+            lifeTimer -= Time.deltaTime;
+
+            if (lifeTimer <= 0f)
+            {
+                currentShots++;
+
+                if (repeatProjectile && (maxShots == 0 || currentShots < maxShots))
+                {
+                    ResetProjectile();
+                }
+                else
+                {
+                    Destroy(gameObject);
+                }
+            }
+        }
+    }
+
+    private void MoveBetweenPointsLogic()
+    {
+        Vector3 destination = movingToPointB ? pointB : startPosition;
+
+        transform.position = Vector3.MoveTowards(transform.position, destination, moveSpeed * Time.deltaTime);
+
+        if (Vector3.Distance(transform.position, destination) < 0.01f)
+        {
+            StartCoroutine(WaitBeforeSwitching());
+        }
+    }
+
+    private IEnumerator WaitBeforeSwitching()
+    {
+        float timer = waitTime;
+        moveBetweenPoints = false; // Pausa moviment durant l'espera
+
+        yield return new WaitForSeconds(timer);
+
+        movingToPointB = !movingToPointB;
+        moveBetweenPoints = true; // Reprèn el moviment
+    }
+
+    private void SetupRigidbody()
+    {
+        rb = GetComponent<Rigidbody>();
+        if (rb == null)
+        {
+            rb = gameObject.AddComponent<Rigidbody>();
+        }
+
+        rb.mass = projectileMass;
+        rb.useGravity = true;
+        rb.isKinematic = false;
+    }
+
+    private void LaunchWithPhysics()
+    {
+        rb.linearVelocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+
+        rb.AddForce(projectileDirection.normalized * impulseForce, ForceMode.Impulse);
+    }
+
+    private void ResetProjectile()
+    {
+        transform.position = startPosition;
+        transform.rotation = startRotation;
+        lifeTimer = lifetime;
+
+        if (usePhysics)
+        {
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+            LaunchWithPhysics();
+        }
+
+        Debug.Log($"🔄 Projectil reiniciat ➜ Tir número {currentShots}" + (maxShots > 0 ? $" / {maxShots}" : " (infinit)"));
+    }
+
+    private void MoveAsProjectile()
+    {
+        transform.Translate(projectileDirection.normalized * projectileSpeed * Time.deltaTime, Space.World);
+    }
 
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Player"))
         {
-            // Aplicar el dany immediatament al entrar
-            DealDamage();
-
-            if (damageOverTime)
-            {
-                nextDamageTime = Time.time + damageRate;
-            }
-        }
-    }
-
-    private void OnTriggerStay(Collider other)
-    {
-        if (other.CompareTag("Player") && damageOverTime)
-        {
-            if (Time.time >= nextDamageTime)
-            {
-                DealDamage();
-                nextDamageTime = Time.time + damageRate;
-            }
-        }
-    }
-
-    private void OnTriggerExit(Collider other)
-    {
-        if (other.CompareTag("Player"))
-        {
-            // Reset del temporitzador o altres accions si cal
-        }
-    }
-
-    private void DealDamage()
-    {
-        if (PlayerStateManager.Instance != null)
-        {
             PlayerStateManager.Instance.TakeDamage(damageAmount);
+        }
 
-            Debug.Log($"👊 Dany aplicat al jugador: {damageAmount}. Vida actual: {PlayerStateManager.Instance.currentHealth}");
+        if (isProjectile)
+        {
+            currentShots++;
 
-            if (PlayerStateManager.Instance.currentHealth <= 0f)
+            if (repeatProjectile && (maxShots == 0 || currentShots < maxShots))
             {
-                Debug.Log("💀 El jugador ha mort.");
-                // Aquí pots cridar GameManager.Instance.LoadScene("GameOverScene");
+                ResetProjectile();
+            }
+            else
+            {
+                Destroy(gameObject);
             }
         }
-        else
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        if (moveBetweenPoints)
         {
-            Debug.LogWarning("⚠️ No s'ha trobat el PlayerStateManager!");
+            Gizmos.color = Color.red;
+            Gizmos.DrawLine(transform.position, targetPosition);
+            Gizmos.DrawSphere(targetPosition, 0.2f);
+        }
+
+        if (isProjectile)
+        {
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawRay(transform.position, projectileDirection.normalized * 2f);
         }
     }
 }

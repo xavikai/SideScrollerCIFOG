@@ -1,21 +1,28 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public class PlayerStateManager : MonoBehaviour
 {
     public static PlayerStateManager Instance;
 
-    [Header("Vida")]
     public float maxHealth = 100f;
     public float currentHealth;
 
-    [Header("Estamina")]
     public float maxStamina = 100f;
     public float currentStamina;
-    public float staminaDrainRate = 10f;
+
+    public int currentCoins;
+
+    public float staminaDrainRate = 10f; // Per l'sprint
     public float staminaRegenRate = 5f;
 
-    [Header("Monedes")]
-    public int currentCoins = 0;
+    public bool isFrozen = false;
+
+    public bool CanMove => currentHealth > 0 && !isFrozen;
+
+    // 🔸 Estats de partida al començament del nivell
+    private float levelStartHealth;
+    private float levelStartStamina;
+    private int levelStartCoins;
 
     private void Awake()
     {
@@ -24,12 +31,16 @@ public class PlayerStateManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
-        Instance = this;
-    }
 
-    private void Start()
-    {
-        ResetStats();
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
+
+        currentHealth = maxHealth;
+        currentStamina = maxStamina;
+        currentCoins = 0;
+
+        // Guardem els valors inicials
+        SaveLevelStartState();
     }
 
     private void Update()
@@ -37,52 +48,63 @@ public class PlayerStateManager : MonoBehaviour
         RegenerateStamina();
     }
 
-    public void ResetStats()
+    private void RegenerateStamina()
     {
-        currentHealth = maxHealth;
-        currentStamina = maxStamina;
-        currentCoins = 0;
+        if (!Input.GetKey(KeyCode.LeftShift))
+        {
+            currentStamina += staminaRegenRate * Time.deltaTime;
+            currentStamina = Mathf.Clamp(currentStamina, 0, maxStamina);
+        }
     }
 
     public void TakeDamage(float damage)
     {
         currentHealth -= damage;
-        if (currentHealth < 0f)
-            currentHealth = 0f;
+        currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
 
-        Debug.Log($"Player damaged! Vida actual: {currentHealth}");
-
-        if (currentHealth <= 0f)
+        if (currentHealth <= 0)
         {
-            Debug.Log("Jugador mort!");
-            // Aqu� pots cridar al GameManager per mostrar el Game Over
+            Debug.Log("💀 Jugador ha mort!");
+            GameManager.Instance.GoToGameOver();
         }
-    }
-
-    public void AddCoins(int amount)
-    {
-        currentCoins += amount;
-        Debug.Log($"Has recollit {amount} monedes. Total: {currentCoins}");
     }
 
     public bool TryUseStamina(float amount)
     {
-        if (currentStamina > 0f)
+        if (currentStamina >= amount)
         {
-            currentStamina -= amount * Time.deltaTime;
-            if (currentStamina < 0f) currentStamina = 0f;
+            currentStamina -= amount;
             return true;
         }
         return false;
     }
 
-    private void RegenerateStamina()
+    public void AddCoins(int amount)
     {
-        if (!StarterAssets.ThirdPersonController.IsSprinting)
-        {
-            currentStamina += staminaRegenRate * Time.deltaTime;
-            if (currentStamina > maxStamina)
-                currentStamina = maxStamina;
-        }
+        currentCoins += amount;
+    }
+
+    public void SetPlayerState(float health, float stamina, int coins)
+    {
+        currentHealth = health;
+        currentStamina = stamina;
+        currentCoins = coins;
+    }
+
+    // 🔸 Guardar estat inicial del nivell
+    public void SaveLevelStartState()
+    {
+        levelStartHealth = currentHealth;
+        levelStartStamina = currentStamina;
+        levelStartCoins = currentCoins;
+
+        Debug.Log($"📝 Estat inicial guardat ➜ Vida: {levelStartHealth}, Estamina: {levelStartStamina}, Monedes: {levelStartCoins}");
+    }
+
+    // 🔸 Restaurar estat inicial del nivell
+    public void RestoreLevelStartState()
+    {
+        SetPlayerState(levelStartHealth, levelStartStamina, levelStartCoins);
+        Debug.Log($"🔄 Estat inicial restaurat ➜ Vida: {currentHealth}, Estamina: {currentStamina}, Monedes: {currentCoins}");
     }
 }

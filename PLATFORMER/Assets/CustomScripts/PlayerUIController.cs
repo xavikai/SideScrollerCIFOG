@@ -1,46 +1,55 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
+using System.Collections;
 
 public class PlayerUIController : MonoBehaviour
 {
+    [Header("HUD Elements")]
     public Slider healthSlider;
     public Slider staminaSlider;
-    public Text coinText;
+    public TMP_Text coinText;
+
+    private PlayerStateManager playerState;
 
     private void Start()
     {
-        healthSlider.maxValue = PlayerStateManager.Instance.maxHealth;
-        staminaSlider.maxValue = PlayerStateManager.Instance.maxStamina;
+        StartCoroutine(WaitForPlayerStateManager());
+    }
+
+    private IEnumerator WaitForPlayerStateManager()
+    {
+        while (PlayerStateManager.Instance == null)
+        {
+            yield return null;
+        }
+
+        playerState = PlayerStateManager.Instance;
+        SetupUI();
+    }
+
+    private void SetupUI()
+    {
+        if (healthSlider != null)
+            healthSlider.maxValue = playerState.maxHealth;
+
+        if (staminaSlider != null)
+            staminaSlider.maxValue = playerState.maxStamina;
+
+        UpdateUI();
     }
 
     private void Update()
     {
-        UpdateHealthUI();
-        UpdateStaminaUI();
-        UpdateCoinsUI();
+        if (playerState == null) return;
+
+        UpdateUI();
     }
 
-    private void UpdateHealthUI()
+    private void UpdateUI()
     {
-        if (healthSlider != null)
-        {
-            healthSlider.value = PlayerStateManager.Instance.currentHealth;
-        }
-    }
-
-    private void UpdateStaminaUI()
-    {
-        if (staminaSlider != null)
-        {
-            staminaSlider.value = PlayerStateManager.Instance.currentStamina;
-        }
-    }
-
-    private void UpdateCoinsUI()
-    {
-        if (coinText != null)
-        {
-            coinText.text = "Coins: " + PlayerStateManager.Instance.currentCoins.ToString();
-        }
+        healthSlider.value = playerState.currentHealth;
+        staminaSlider.value = playerState.currentStamina;
+        coinText.text = "Monedes: " + playerState.currentCoins;
     }
 }

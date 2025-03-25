@@ -1,11 +1,28 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 
 public class PauseMenuManager : MonoBehaviour
 {
-    [Header("Canvas del Menú de Pausa")]
+    [Header("UI Elements")]
     public GameObject pauseMenuUI;
+    public Button resumeButton;
+    public Button restartLevelButton;
+    public Button mainMenuButton;
 
     private bool isPaused = false;
+
+    private void Start()
+    {
+        // Assignem accions als botons
+        if (resumeButton != null)
+            resumeButton.onClick.AddListener(Resume);
+
+        if (restartLevelButton != null)
+            restartLevelButton.onClick.AddListener(RestartLevel);
+
+        if (mainMenuButton != null)
+            mainMenuButton.onClick.AddListener(GoToMainMenu);
+    }
 
     private void Update()
     {
@@ -13,60 +30,51 @@ public class PauseMenuManager : MonoBehaviour
         {
             if (isPaused)
             {
-                ResumeGame();
+                Resume();
             }
             else
             {
-                PauseGame();
+                Pause();
             }
         }
     }
 
-    public void ResumeGame()
-    {
-        pauseMenuUI.SetActive(false);
-        Time.timeScale = 1f;
-        isPaused = false;
-
-        Cursor.visible = false;
-        Cursor.lockState = CursorLockMode.Locked;
-
-        Debug.Log("Joc reprès!");
-    }
-
-    private void PauseGame()
+    public void Pause()
     {
         pauseMenuUI.SetActive(true);
         Time.timeScale = 0f;
         isPaused = true;
-
-        Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
-
-        Debug.Log("Joc pausat!");
+        Cursor.visible = true;
     }
 
-    public void RestartLevel()
+    public void Resume()
     {
+        pauseMenuUI.SetActive(false);
         Time.timeScale = 1f;
         isPaused = false;
-
-        Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
-
-        Debug.Log("Reiniciant el nivell...");
-        GameManager.Instance.RestartLevel();
+        Cursor.visible = false;
     }
 
-    public void ReturnToMainMenu()
+    private void RestartLevel()
     {
         Time.timeScale = 1f;
         isPaused = false;
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
 
-        Cursor.visible = true;
+        // 👉 Reinicia el nivell des de zero, com si fos una partida nova
+        GameManager.Instance.RestartLevelFromScratch();
+    }
+
+    private void GoToMainMenu()
+    {
+        Time.timeScale = 1f;
+        isPaused = false;
         Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
 
-        Debug.Log("Tornant al menú principal...");
-        GameManager.Instance.LoadScene("MainMenu");
+        GameManager.Instance.GoToMainMenu();
     }
 }
