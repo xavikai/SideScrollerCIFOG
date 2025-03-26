@@ -36,6 +36,7 @@ public class CheatManager : MonoBehaviour
         if (debugModeOnly && !Application.isEditor) return;
 
         DetectInput();
+        DetectFunctionKeyCheats();
     }
 
     private void DetectInput()
@@ -55,7 +56,6 @@ public class CheatManager : MonoBehaviour
                     Debug.Log($"🚀 Cheat activat: saltant a {levelName}");
                     ShowCheatStaticText($"LEVEL {levelIndex}");
 
-                    // Retard augmentat per veure el text estàtic
                     StartCoroutine(DelayedLevelLoad(levelName));
 
                     inputBuffer = "";
@@ -74,9 +74,36 @@ public class CheatManager : MonoBehaviour
         }
     }
 
+    private void DetectFunctionKeyCheats()
+    {
+        var player = PlayerStateManager.Instance;
+        if (player == null) return;
+
+        if (Input.GetKeyDown(KeyCode.F6))
+        {
+            player.currentHealth = player.maxHealth;
+            ShowCheatStaticText($"HEALTH MAX!");
+            Debug.Log("❤️ Vida restaurada al màxim.");
+        }
+
+        if (Input.GetKeyDown(KeyCode.F7))
+        {
+            player.currentStamina = player.maxStamina;
+            ShowCheatStaticText($"STAMINA MAX!");
+            Debug.Log("⚡ Estamina restaurada al màxim.");
+        }
+
+        if (Input.GetKeyDown(KeyCode.F8))
+        {
+            player.AddCoins(1);
+            ShowCheatStaticText($"+1 COIN");
+            Debug.Log($"🪙 Moneda afegida. Total: {player.currentCoins}");
+        }
+    }
+
     private System.Collections.IEnumerator DelayedLevelLoad(string levelName)
     {
-        yield return new WaitForSeconds(1.5f); // augmentat per mostrar més temps el text
+        yield return new WaitForSeconds(1.5f);
         GameManager.Instance.StartNextLevel(levelName);
     }
 
@@ -100,8 +127,6 @@ public class CheatManager : MonoBehaviour
         {
             floatingTextScript.SetupText(message, cheatTextColor);
             floatingTextScript.textFeedback.fontSize = floatingTextFontSize;
-
-            // Fent-lo estàtic: eliminem moviment i fade ràpid
             floatingTextScript.floatSpeed = 0f;
             floatingTextScript.fadeDuration = 1.4f;
 
