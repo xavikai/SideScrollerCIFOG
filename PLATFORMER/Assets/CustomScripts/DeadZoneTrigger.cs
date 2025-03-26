@@ -8,10 +8,11 @@ public class DeadZoneTrigger : MonoBehaviour
         {
             Debug.Log("☠️ El jugador ha caigut a la DeadZone!");
 
-            // Comprova si hi ha un PlayerStateManager actiu
+            // Reproduir so de caiguda via AudioManager
+            AudioManager.Instance?.PlaySound(AudioManager.Instance.deadZoneFallSound, transform.position);
+
             if (PlayerStateManager.Instance != null)
             {
-                // Redueix la vida a zero ➜ Morirà automàticament si tens aquest control
                 PlayerStateManager.Instance.TakeDamage(PlayerStateManager.Instance.currentHealth);
             }
             else

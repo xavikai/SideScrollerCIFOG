@@ -20,7 +20,6 @@ public class DamageDealer : MonoBehaviour
 
     [Header("Repetició Projectil")]
     public bool repeatProjectile = false;
-    [Tooltip("0 ➜ dispararà infinitament")]
     public int maxShots = 0;
 
     [Header("Física (Opcional)")]
@@ -34,7 +33,6 @@ public class DamageDealer : MonoBehaviour
     private float lifeTimer;
     private Rigidbody rb;
 
-    private Vector3 pointB => targetPosition;
     private bool movingToPointB = true;
 
     private void Start()
@@ -45,17 +43,13 @@ public class DamageDealer : MonoBehaviour
 
         if (moveBetweenPoints)
         {
-            // Inicialitza el punt B
             movingToPointB = true;
         }
 
-        if (isProjectile)
+        if (isProjectile && usePhysics)
         {
-            if (usePhysics)
-            {
-                SetupRigidbody();
-                LaunchWithPhysics();
-            }
+            SetupRigidbody();
+            LaunchWithPhysics();
         }
     }
 
@@ -71,7 +65,6 @@ public class DamageDealer : MonoBehaviour
             MoveAsProjectile();
         }
 
-        // Controla el temps de vida (projectils)
         if (isProjectile)
         {
             lifeTimer -= Time.deltaTime;
@@ -94,7 +87,7 @@ public class DamageDealer : MonoBehaviour
 
     private void MoveBetweenPointsLogic()
     {
-        Vector3 destination = movingToPointB ? pointB : startPosition;
+        Vector3 destination = movingToPointB ? targetPosition : startPosition;
 
         transform.position = Vector3.MoveTowards(transform.position, destination, moveSpeed * Time.deltaTime);
 
@@ -106,13 +99,10 @@ public class DamageDealer : MonoBehaviour
 
     private IEnumerator WaitBeforeSwitching()
     {
-        float timer = waitTime;
-        moveBetweenPoints = false; // Pausa moviment durant l'espera
-
-        yield return new WaitForSeconds(timer);
-
+        moveBetweenPoints = false;
+        yield return new WaitForSeconds(waitTime);
         movingToPointB = !movingToPointB;
-        moveBetweenPoints = true; // Reprèn el moviment
+        moveBetweenPoints = true;
     }
 
     private void SetupRigidbody()
@@ -148,8 +138,6 @@ public class DamageDealer : MonoBehaviour
             rb.angularVelocity = Vector3.zero;
             LaunchWithPhysics();
         }
-
-        Debug.Log($"🔄 Projectil reiniciat ➜ Tir número {currentShots}" + (maxShots > 0 ? $" / {maxShots}" : " (infinit)"));
     }
 
     private void MoveAsProjectile()
@@ -162,6 +150,9 @@ public class DamageDealer : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             PlayerStateManager.Instance.TakeDamage(damageAmount);
+
+            // So d'impacte via AudioManager
+            AudioManager.Instance?.PlaySound(AudioManager.Instance.damageImpactSound, transform.position);
         }
 
         if (isProjectile)

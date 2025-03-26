@@ -14,21 +14,21 @@ public class MultiFunctionPlatform : MonoBehaviour
     [Header("Tipus de plataforma")]
     public PlatformType platformType = PlatformType.Static;
 
-    [Header("Par�metres de moviment (Moving Platform)")]
+    [Header("Paràmetres de moviment (Moving Platform)")]
     public Vector3 targetPosition;
     public float speed = 2.0f;
     public float waitTime = 1.0f;
 
-    [Header("Par�metres de plataforma caient (Falling Platform)")]
+    [Header("Paràmetres de plataforma caient (Falling Platform)")]
     public float fallDelay = 1.0f;
     private bool hasFallen = false;
 
-    [Header("Par�metres de destrucci� (Destructible Platform)")]
+    [Header("Paràmetres de destrucció (Destructible Platform)")]
     public float destroyDelay = 1.0f;
 
-    [Header("Par�metres de respawn (Falling & Destructible)")]
-    public bool respawn = false;          // Activa o desactiva el respawn
-    public float respawnDelay = 3.0f;     // Temps d'espera abans del respawn
+    [Header("Paràmetres de respawn (Falling & Destructible)")]
+    public bool respawn = false;
+    public float respawnDelay = 3.0f;
 
     private Vector3 startPosition;
     private Quaternion startRotation;
@@ -39,10 +39,14 @@ public class MultiFunctionPlatform : MonoBehaviour
     private Collider[] colliders;
     private Renderer[] renderers;
 
+    private AudioManager audioManager;
+
     void Start()
     {
         startPosition = transform.position;
         startRotation = transform.rotation;
+
+        audioManager = AudioManager.Instance;
 
         if (platformType == PlatformType.Falling)
         {
@@ -90,6 +94,7 @@ public class MultiFunctionPlatform : MonoBehaviour
 
                 if (Vector3.Distance(transform.position, destination) < 0.01f)
                 {
+                    audioManager?.PlaySound(audioManager.platformMoveSound, transform.position);
                     isWaiting = true;
                     yield return new WaitForSeconds(waitTime);
                     goingToTarget = !goingToTarget;
@@ -104,12 +109,12 @@ public class MultiFunctionPlatform : MonoBehaviour
     IEnumerator FallAfterDelay()
     {
         hasFallen = true;
-
         yield return new WaitForSeconds(fallDelay);
 
         if (rb != null)
         {
             rb.isKinematic = false;
+            audioManager?.PlaySound(audioManager.platformFallSound, transform.position);
         }
 
         if (respawn)
@@ -124,6 +129,7 @@ public class MultiFunctionPlatform : MonoBehaviour
         yield return new WaitForSeconds(destroyDelay);
 
         HidePlatform();
+        audioManager?.PlaySound(audioManager.platformDestroySound, transform.position);
 
         if (respawn)
         {
@@ -138,7 +144,6 @@ public class MultiFunctionPlatform : MonoBehaviour
 
     void HidePlatform()
     {
-        // Desactiva col�liders i renderitzadors per simular que ha desaparegut
         foreach (Collider col in colliders)
         {
             col.enabled = false;
@@ -152,11 +157,9 @@ public class MultiFunctionPlatform : MonoBehaviour
 
     void RespawnPlatform()
     {
-        // Reinicia posici� i rotaci�
         transform.position = startPosition;
         transform.rotation = startRotation;
 
-        // Si �s Falling, reinicia Rigidbody
         if (platformType == PlatformType.Falling && rb != null)
         {
             rb.isKinematic = true;
@@ -165,7 +168,6 @@ public class MultiFunctionPlatform : MonoBehaviour
             hasFallen = false;
         }
 
-        // Torna a activar col�liders i renderitzadors
         foreach (Collider col in colliders)
         {
             col.enabled = true;

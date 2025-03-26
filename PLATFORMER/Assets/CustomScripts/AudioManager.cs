@@ -1,7 +1,7 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 
 [System.Serializable]
 public class SceneMusic
@@ -19,8 +19,17 @@ public class AudioManager : MonoBehaviour
 
     [Header("Configuració d'àudio")]
     public AudioSource musicSource;
-    public float fadeDuration = 1f;
+    public float fadeDuration = 0.5f; // fade ràpid
     public float musicVolume = 0.5f;
+
+    [Header("Efectes de so globals")]
+    public AudioClip platformMoveSound;
+    public AudioClip platformFallSound;
+    public AudioClip platformDestroySound;
+    public AudioClip damageImpactSound;
+    public AudioClip deadZoneFallSound;
+    public AudioClip coinPickupSound;
+    public AudioClip regeneratorPickupSound;
 
     private void Awake()
     {
@@ -70,7 +79,6 @@ public class AudioManager : MonoBehaviour
 
     private IEnumerator FadeInNewMusic(AudioClip newClip)
     {
-        // Fade out actual
         float startVolume = musicSource.volume;
         for (float t = 0; t < fadeDuration; t += Time.deltaTime)
         {
@@ -82,7 +90,6 @@ public class AudioManager : MonoBehaviour
         musicSource.clip = newClip;
         musicSource.Play();
 
-        // Fade in
         for (float t = 0; t < fadeDuration; t += Time.deltaTime)
         {
             musicSource.volume = Mathf.Lerp(0f, musicVolume, t / fadeDuration);
@@ -92,9 +99,11 @@ public class AudioManager : MonoBehaviour
         musicSource.volume = musicVolume;
     }
 
-    public void SetMusicVolume(float newVolume)
+    public void PlaySound(AudioClip clip, Vector3 position, float volume = 1f)
     {
-        musicVolume = newVolume;
-        musicSource.volume = newVolume;
+        if (clip != null)
+        {
+            AudioSource.PlayClipAtPoint(clip, position, volume);
+        }
     }
 }

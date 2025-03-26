@@ -6,23 +6,8 @@ public class Coin : MonoBehaviour
     public int coinValue = 1;
     public float rotationSpeed = 50f;
 
-    [Header("Efectes visuals i sons")]
+    [Header("Efectes visuals")]
     public ParticleSystem pickupEffect;
-    public AudioClip pickupSound;
-    public float soundVolume = 1.0f;
-
-    private AudioSource audioSource;
-
-    private void Awake()
-    {
-        // Busquem o afegim l'AudioSource
-        audioSource = GetComponent<AudioSource>();
-        if (audioSource == null)
-        {
-            audioSource = gameObject.AddComponent<AudioSource>();
-            audioSource.playOnAwake = false; // No ha de sonar automàticament
-        }
-    }
 
     private void Update()
     {
@@ -33,16 +18,16 @@ public class Coin : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            // ✅ Afegim les monedes al jugador
+            // Afegim monedes al jugador
             PlayerStateManager.Instance.AddCoins(coinValue);
 
-            // ✅ Executem l'efecte de partícules (si hi ha)
+            // Efecte de partícules
             PlayPickupEffect();
 
-            // ✅ Reproduïm el so (si hi ha)
-            PlayPickupSound();
+            // Reproduir so centralitzat via AudioManager
+            AudioManager.Instance?.PlaySound(AudioManager.Instance.coinPickupSound, transform.position);
 
-            // ✅ Destruïm la moneda després de l'efecte
+            // Destruïm la moneda
             Destroy(gameObject);
         }
     }
@@ -51,17 +36,7 @@ public class Coin : MonoBehaviour
     {
         if (pickupEffect != null)
         {
-            // Instanciem les partícules en la posició de la moneda
             Instantiate(pickupEffect, transform.position, Quaternion.identity);
-        }
-    }
-
-    private void PlayPickupSound()
-    {
-        if (pickupSound != null)
-        {
-            // Reproduïm el clip una vegada en la posició actual
-            AudioSource.PlayClipAtPoint(pickupSound, transform.position, soundVolume);
         }
     }
 }

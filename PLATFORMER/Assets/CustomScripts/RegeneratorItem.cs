@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System.Collections;
 
 public class RegeneratorItem : MonoBehaviour
 {
@@ -10,14 +11,12 @@ public class RegeneratorItem : MonoBehaviour
     public float healthAmount = 20f;
     public float staminaAmount = 20f;
 
-    [Header("Regeneració després de recollir")]
+    [Header("Respawn després de recollir")]
     public bool canRespawn = false;
     public float respawnDelay = 5f;
 
-    [Header("Efectes visuals i sons")]
+    [Header("Efectes visuals")]
     public ParticleSystem pickupEffect;
-    public AudioClip pickupSound;
-    public float soundVolume = 1.0f;
 
     [Header("Floating Text Configuració")]
     public GameObject floatingTextPrefab;
@@ -26,18 +25,11 @@ public class RegeneratorItem : MonoBehaviour
 
     private Renderer[] renderers;
     private Collider[] colliders;
-    private AudioSource audioSource;
 
     private void Awake()
     {
         renderers = GetComponentsInChildren<Renderer>();
         colliders = GetComponentsInChildren<Collider>();
-
-        audioSource = GetComponent<AudioSource>();
-        if (audioSource == null)
-        {
-            audioSource = gameObject.AddComponent<AudioSource>();
-        }
     }
 
     private void OnTriggerEnter(Collider other)
@@ -49,13 +41,11 @@ public class RegeneratorItem : MonoBehaviour
 
         if (regeneratesHealth && player.currentHealth < player.maxHealth)
         {
-            float prevHealth = player.currentHealth;
-            player.currentHealth = Mathf.Min(player.currentHealth + healthAmount, player.maxHealth);
-            float gained = player.currentHealth - prevHealth;
+            float gained = Mathf.Min(healthAmount, player.maxHealth - player.currentHealth);
+            player.currentHealth += gained;
 
             if (gained > 0)
             {
-                Debug.Log($"❤️ Vida regenerada: {player.currentHealth} / {player.maxHealth} (+{gained})");
                 ShowFloatingText($"+{gained} HP");
                 didSomething = true;
             }
@@ -63,13 +53,11 @@ public class RegeneratorItem : MonoBehaviour
 
         if (regeneratesStamina && player.currentStamina < player.maxStamina)
         {
-            float prevStamina = player.currentStamina;
-            player.currentStamina = Mathf.Min(player.currentStamina + staminaAmount, player.maxStamina);
-            float gained = player.currentStamina - prevStamina;
+            float gained = Mathf.Min(staminaAmount, player.maxStamina - player.currentStamina);
+            player.currentStamina += gained;
 
             if (gained > 0)
             {
-                Debug.Log($"⚡ Estamina regenerada: {player.currentStamina} / {player.maxStamina} (+{gained})");
                 ShowFloatingText($"+{gained} STA");
                 didSomething = true;
             }
@@ -78,7 +66,8 @@ public class RegeneratorItem : MonoBehaviour
         if (didSomething)
         {
             PlayPickupEffect();
-            PlayPickupSound();
+            // So centralitzat via AudioManager
+            AudioManager.Instance?.PlaySound(AudioManager.Instance.regeneratorPickupSound, transform.position);
 
             if (canRespawn)
             {
@@ -99,46 +88,21 @@ public class RegeneratorItem : MonoBehaviour
         }
     }
 
-    private void PlayPickupSound()
-    {
-        if (pickupSound != null)
-        {
-            audioSource.PlayOneShot(pickupSound, soundVolume);
-        }
-    }
-
     private void ShowFloatingText(string text)
     {
-        if (floatingTextPrefab == null)
-        {
-            Debug.LogError("❌ No s'ha assignat el prefab de FloatingText al RegeneratorItem!");
-            return;
-        }
+        if (floatingTextPrefab == null) return;
 
         Transform spawnPoint = floatingTextSpawnPoint != null ? floatingTextSpawnPoint : transform;
-
         GameObject textObj = Instantiate(floatingTextPrefab, spawnPoint.position, Quaternion.identity);
 
-        if (textObj == null)
-        {
-            Debug.LogError("❌ No s'ha pogut instanciar el FloatingText!");
-            return;
-        }
-
         FloatingText floatingTextScript = textObj.GetComponent<FloatingText>();
-
-        if (floatingTextScript == null)
+        if (floatingTextScript != null)
         {
-            Debug.LogError("❌ El prefab no té el script FloatingText assignat!");
-            return;
+            floatingTextScript.SetupText(text, floatingTextColor);
         }
-
-        floatingTextScript.SetupText(text, floatingTextColor);
-
-        Debug.Log($"✅ FloatingText creat ➜ Text: {text} | Vertex Color: {floatingTextColor}");
     }
 
-    private System.Collections.IEnumerator RespawnRoutine()
+    private IEnumerator RespawnRoutine()
     {
         HideObject();
         yield return new WaitForSeconds(respawnDelay);
@@ -169,11 +133,5 @@ public class RegeneratorItem : MonoBehaviour
         {
             col.enabled = true;
         }
-    }
-
-    private void OnDrawGizmosSelected()
-    {
-        Gizmos.color = Color.green;
-        Gizmos.DrawWireSphere(transform.position, 0.5f);
     }
 }
