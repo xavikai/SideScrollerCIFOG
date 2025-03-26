@@ -48,17 +48,13 @@ namespace StarterAssets
         private StarterAssetsInputs _input;
         private GameObject _mainCamera;
 
-        private int _animIDSpeed;
         private int _animIDCrouch;
         private int _animIDDoubleJump;
         private int _animIDDeath;
 
         private void Awake()
         {
-            if (_mainCamera == null)
-            {
-                _mainCamera = GameObject.FindGameObjectWithTag("MainCamera");
-            }
+            _mainCamera = GameObject.FindGameObjectWithTag("MainCamera");
         }
 
         private void Start()
@@ -83,7 +79,6 @@ namespace StarterAssets
 
         private void AssignAnimationIDs()
         {
-            _animIDSpeed = Animator.StringToHash("Speed");
             _animIDCrouch = Animator.StringToHash("Crouch");
             _animIDDoubleJump = Animator.StringToHash("DoubleJump");
             _animIDDeath = Animator.StringToHash("Die");
@@ -102,7 +97,7 @@ namespace StarterAssets
 
         private void HandleCrouch()
         {
-            if (enableCrouch && _input.crouchPressed)
+            if (enableCrouch && _input != null && _input.crouchPressed)
             {
                 isCrouching = !isCrouching;
                 _animator.SetBool(_animIDCrouch, isCrouching);
@@ -142,7 +137,7 @@ namespace StarterAssets
             Vector3 targetDirection = Quaternion.Euler(0.0f, transform.eulerAngles.y, 0.0f) * Vector3.forward;
             _controller.Move(targetDirection.normalized * (_speed * Time.deltaTime) + new Vector3(0.0f, _verticalVelocity, 0.0f) * Time.deltaTime);
 
-            _animator.SetFloat(_animIDSpeed, _speed);
+            _animator.SetFloat("MotionSpeed", _speed);
 
             if (isCrouching && _speed > 0.1f)
             {
