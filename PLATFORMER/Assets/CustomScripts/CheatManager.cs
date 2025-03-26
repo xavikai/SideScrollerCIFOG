@@ -8,6 +8,12 @@ public class CheatManager : MonoBehaviour
     public bool cheatsEnabled = true;
     public bool debugModeOnly = true; // Només en mode editor o debug
 
+    [Header("FloatingText Settings")]
+    public GameObject floatingTextPrefab;
+    public Transform floatingTextSpawnPoint; // Opcional, sinó apareixerà davant la càmera
+    public Color cheatTextColor = Color.cyan;
+    public float floatingTextFontSize = 2f; // Mida del text
+
     private string inputBuffer = "";
     private float bufferClearTime = 2f; // temps per buidar el buffer
     private float bufferTimer = 0f;
@@ -39,7 +45,6 @@ public class CheatManager : MonoBehaviour
             inputBuffer += c;
             bufferTimer = bufferClearTime;
 
-            // Comprova si el buffer té un codi vàlid (ex: l4, l10, etc.)
             if (inputBuffer.StartsWith("l") && inputBuffer.Length > 1)
             {
                 string levelNumber = inputBuffer.Substring(1);
@@ -48,15 +53,17 @@ public class CheatManager : MonoBehaviour
                 {
                     string levelName = $"Level{levelIndex}";
                     Debug.Log($"🚀 Cheat activat: saltant a {levelName}");
-                    GameManager.Instance.StartNextLevel(levelName);
+                    ShowCheatStaticText($"LEVEL {levelIndex}");
 
-                    inputBuffer = ""; // buida el buffer
+                    // Retard augmentat per veure el text estàtic
+                    StartCoroutine(DelayedLevelLoad(levelName));
+
+                    inputBuffer = "";
                     return;
                 }
             }
         }
 
-        // Gestiona el temporitzador per buidar buffer
         if (bufferTimer > 0)
         {
             bufferTimer -= Time.deltaTime;
@@ -64,6 +71,45 @@ public class CheatManager : MonoBehaviour
         else
         {
             inputBuffer = "";
+        }
+    }
+
+    private System.Collections.IEnumerator DelayedLevelLoad(string levelName)
+    {
+        yield return new WaitForSeconds(1.5f); // augmentat per mostrar més temps el text
+        GameManager.Instance.StartNextLevel(levelName);
+    }
+
+    private void ShowCheatStaticText(string message)
+    {
+        if (floatingTextPrefab == null)
+        {
+            Debug.LogWarning("❗ Prefab de FloatingText no assignat al CheatManager!");
+            return;
+        }
+
+        Vector3 spawnPosition = floatingTextSpawnPoint != null
+            ? floatingTextSpawnPoint.position
+            : Camera.main.transform.position + Camera.main.transform.forward * 2f;
+
+        GameObject textObj = Instantiate(floatingTextPrefab, spawnPosition, Quaternion.identity);
+
+        FloatingText floatingTextScript = textObj.GetComponent<FloatingText>();
+
+        if (floatingTextScript != null)
+        {
+            floatingTextScript.SetupText(message, cheatTextColor);
+            floatingTextScript.textFeedback.fontSize = floatingTextFontSize;
+
+            // Fent-lo estàtic: eliminem moviment i fade ràpid
+            floatingTextScript.floatSpeed = 0f;
+            floatingTextScript.fadeDuration = 1.4f;
+
+            Debug.Log($"✅ Cheat Static Text: {message}");
+        }
+        else
+        {
+            Debug.LogError("❌ El prefab de FloatingText no té el component FloatingText!");
         }
     }
 }
